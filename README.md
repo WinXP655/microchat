@@ -12,14 +12,20 @@ No heavy libraries and extra dependencies.
 - **Open source:** fully transparent, easy to audit or extend.
 - **Cross-version compatible:** designed to run on legacy and modern systems.
 
-## Requirements for building
-For successful compilation you need:
-- **GCC** (WinGW/MSYS2) under Windows or any other compiler.
-- **Resource Hacker** (for editing resources).
-- Basic knowledge of **CMD/CLI**.
-- Knowledge of C language.
-- Building OS: Windows 7 and higher (for building tools).
-- Testing OS: Main OS or Virtual Machine (Windows NT 4.0/98 SE up to 11).
+## Requirements for Building
+For successful compilation and customization you need:
+- **Compiler:** 
+  - **GCC/MinGW-w64** (via MSYS2 or Cygwin) — recommended for lightweight builds.
+  - **MSVC** (Visual Studio Build Tools) — alternative for Windows native development.
+- **Resource Editing Tool:** 
+  - **Resource Hacker** (optional) — required only if you want to customize connection dialog or icons.
+- **Basic Skills:**
+  - Knowledge of **CMD/CLI** navigation.
+  - Basic understanding of **C programming** and **WinAPI**.
+- **Build Environment:**
+  - Any modern **Windows OS** (Win 10/11 recommended for build tools).
+- **Testing Environment:**
+  - Virtual Machines preferred: Windows NT 4.0, 98 SE, XP, 7 through 11.
 
 ## Compiling
 
