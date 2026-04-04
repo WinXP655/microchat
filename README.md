@@ -7,15 +7,19 @@ No heavy libraries and extra dependencies.
 
 ## Features
 - **No dependencies:** works everywhere (Windows NT 4.0/98 SE - Windows 11).
-- **Lightweight:** uses only 2 MB of memory.
+- **Lightweight:** single-file executable, low memory footprint.
+- **Pure C implementation:** no external libraries beyond standard Win32 API
+- **Open source:** fully transparent, easy to audit or extend.
+- **Cross-version compatible:** designed to run on legacy and modern systems.
 
 ## Requirements for building
 For successful compilation you need:
-- **GCC** (WinGW/MSYS2) under Windows.
+- **GCC** (WinGW/MSYS2) under Windows or any other compiler.
 - **Resource Hacker** (for editing resources).
 - Basic knowledge of **CMD/CLI**.
 - Knowledge of C language.
-- OS: Windows 7 and higher (for building tools).
+- Building OS: Windows 7 and higher (for building tools).
+- Testing OS: Main OS or Virtual Machine (Windows NT 4.0/98 SE up to 11).
 
 ## Compiling
 
@@ -39,6 +43,13 @@ Using Resource Hacker you also can add:
 - Your icon (Action -> Add an Image or Other Binary Resource)
 - Your version info (Action -> Add using Script Template)
 - And anything else.
+
+## 5. How to extend MicroChat
+You can build your own network app using this code:
+1. Copy `microchat.c` to your project.
+2. Modify port `#define PORT` to your needs.
+3. Implement your custom protocol over the TCP socket.
+4. Build and deploy.
 
 ## License
 This application is distributed under MIT license. Explore, learn, enhance.
