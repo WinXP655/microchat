@@ -1,5 +1,4 @@
-// MicroChat Framework - chat client and host are examples how to use it.
-// You are free to make any network app based on it.
+// MicroChat Framework - chat client and host.
 // TCP chat over port 1723
 // Simple Win32 GUI with message display, input edit, and send button
 // Uses Winsock2 for networking
