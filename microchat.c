@@ -1,9 +1,3 @@
-// MicroChat Framework - chat client and host.
-// TCP chat over port 1723
-// Simple Win32 GUI with message display, input edit, and send button
-// Uses Winsock2 for networking
-// Author: WinXP655
-
 #include <winsock2.h>
 #include <windows.h>
 #include <stdio.h>
