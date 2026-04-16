@@ -25,7 +25,7 @@ For successful compilation and customization you need:
   - **Resource Hacker** (optional) — required only if you want to customize connection dialog or icons.
 - **Basic Skills:**
   - Knowledge of **CMD/CLI** navigation.
-  - Basic understanding of **C programming** and **WinAPI**.
+  - Intermediate understanding of **C programming, WinAPI and WinSock**.
 - **Build Environment:**
   - Any modern **Windows OS** (Win 10/11 recommended for build tools).
 - **Testing Environment:**
