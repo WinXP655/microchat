@@ -12,6 +12,10 @@ No heavy libraries and extra dependencies.
 - **Open source:** fully transparent, easy to audit or extend.
 - **Cross-version compatible:** designed to run on legacy and modern systems.
 
+> **Security Notice:**
+> MicroChat transmits all data in plain text by default.  
+> If you plan to fork or extend it, it is strongly recommended to add your own encryption layer (XOR/AES/custom protocol).
+
 ## Requirements for Building
 For successful compilation and customization you need:
 - **Compiler:** 
@@ -50,12 +54,12 @@ Using Resource Hacker you also can add:
 - Your version info (Action -> Add using Script Template)
 - And anything else.
 
-## 5. How to extend MicroChat
-You can build your own network app using this code:
-1. Copy `microchat.c` to your project.
-2. Modify port `#define PORT` to your needs.
-3. Implement your custom protocol over the TCP socket.
-4. Build and deploy.
+## 5. Extend MicroChat
+Build anything from this raw engine:
+1. **Copy** `microchat.c` into your project.
+2. **Adapt**: Change the port, swap the UI (Qt/WPF/Console), or strip it for a library.
+3. **Customize**: Implement your own protocol, encryption, or binary data handling.
+4. **Build & Deploy**: Compile with GCC/MSVC and run anywhere.
 
 ## License
 This application is distributed under MIT license. Explore, learn, enhance.
