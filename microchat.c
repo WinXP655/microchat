@@ -116,6 +116,10 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
 		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_THICKFRAME | WS_MAXIMIZEBOX,
 		CW_USEDEFAULT, CW_USEDEFAULT, 520, 320,
 		NULL, NULL, hInstance, NULL);
+	if (!hWnd) {
+		MessageBox(NULL, "Failed to create main window.", "MicroChat", MB_OK);
+		ExitProcess(1);
+	}
 
 	hwnd_global = hWnd;
 	ShowWindow(hWnd, nCmdShow);
@@ -241,7 +245,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 			SendMessage(hSendBtn, WM_SETFONT, (WPARAM)hFontBold, TRUE);
 
+			SetLastError(0);
 			g_oldEditProc = (WNDPROC)SetWindowLongPtr(hEdit, GWLP_WNDPROC, (LONG_PTR)EditProc);
+			if (!g_oldEditProc && GetLastError() != 0) {
+				AddMessage("Warning: edit subclass setup failed. Enter and Ctrl+A may not work as expected.");
+			}
 			return 0;
 		}
 
@@ -441,7 +449,12 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 		AddMessage(sys_msg);
 	}
 
-	_beginthread(ReceiveMessages, 0, NULL);
+	uintptr_t thread_handle = _beginthread(ReceiveMessages, 0, NULL);
+	if (thread_handle == (uintptr_t)-1L) {
+		MessageBox(NULL, "Failed to start receive thread. MicroChat will close.", "MicroChat", MB_OK);
+		CleanupAndExit(hwnd_global);
+		return false;
+	}
 	return true;
 }
 
@@ -504,9 +517,7 @@ void AddMessage(const char* msg) {
 	if (!hMsgDisplay || !IsWindow(hMsgDisplay) || !msg || !*msg) return;
 	int len = GetWindowTextLength(hMsgDisplay);
 	SendMessage(hMsgDisplay, EM_SETSEL, len, len);
-	
 	if (len > 0) SendMessage(hMsgDisplay, EM_REPLACESEL, FALSE, (LPARAM)"\r\n");
-	
 	SendMessage(hMsgDisplay, EM_REPLACESEL, FALSE, (LPARAM)msg);
 	SendMessage(hMsgDisplay, WM_VSCROLL, SB_BOTTOM, 0);
 }
