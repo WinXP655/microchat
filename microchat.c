@@ -250,6 +250,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 			SendMessage(hSendBtn, WM_SETFONT, (WPARAM)hFontBold, TRUE);
 
+			// Replacing default key handler. Needed to handle custom ENTER functions
+			// Before EDIT will even create new line.
 			SetLastError(0);
 			g_oldEditProc = (WNDPROC)SetWindowLongPtr(hEdit, GWLP_WNDPROC, (LONG_PTR)EditProc);
 			if (!g_oldEditProc && GetLastError() != 0) {
