@@ -1,3 +1,6 @@
+// MicroChat Framework by WinXP655
+// Distributed under MIT License
+
 #include <winsock2.h>
 #include <windows.h>
 #include <stdio.h>
@@ -45,8 +48,10 @@ bool GetDefaultIP(char *ip_buffer, size_t size) {
 	remote.sin_port = htons(53);
 	remote.sin_addr.s_addr = inet_addr("8.8.8.8");
 
+	// UDP hack: connect() on UDP keep address in memory...
 	connect(s, (struct sockaddr*)&remote, sizeof(remote));
 
+	// ... and then getsockname() return local IP address which will be displayed.
 	struct sockaddr_in local;
 	int len = sizeof(local);
 	getsockname(s, (struct sockaddr*)&local, &len);
@@ -301,6 +306,8 @@ void Disconnect() {
 void CleanupAndExit(HWND hWnd) {
 	(void)hWnd;
 	is_running = 0;
+
+	// Giving some time for ReceiveMessages to leave recv().
 	Sleep(50);
 	
 	if (client_socket != INVALID_SOCKET) {
@@ -431,6 +438,8 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 			ExitProcess(1);
 		}
 
+		// Calling getsockname() after connect modify socket type from "soft" to "hard" bind on Vista+ systems.
+		// On pre-Vista systems it also disable "Weak Host Model".
 		struct sockaddr_in server_info;
 		int len = sizeof(server_info);
 		getsockname(client_socket, (struct sockaddr*)&server_info, &len);
@@ -449,6 +458,8 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 		AddMessage(sys_msg);
 	}
 
+	// _beginthread() uses CRT, critical if it will be run on non-NT systems
+	// and also CreateThread is not working on Windows 9x systems because not initialized by CRT
 	uintptr_t thread_handle = _beginthread(ReceiveMessages, 0, NULL);
 	if (thread_handle == (uintptr_t)-1L) {
 		MessageBox(NULL, "Failed to start receive thread. MicroChat will close.", "MicroChat", MB_OK);
@@ -516,7 +527,10 @@ void SendCurrentMessage(HWND hWnd) {
 void AddMessage(const char* msg) {
 	if (!hMsgDisplay || !IsWindow(hMsgDisplay) || !msg || !*msg) return;
 	int len = GetWindowTextLength(hMsgDisplay);
+	
 	SendMessage(hMsgDisplay, EM_SETSEL, len, len);
+
+	// Using EM_REPLACESEL instead SetWindowText to add string without overwriting entire buffer.
 	if (len > 0) SendMessage(hMsgDisplay, EM_REPLACESEL, FALSE, (LPARAM)"\r\n");
 	SendMessage(hMsgDisplay, EM_REPLACESEL, FALSE, (LPARAM)msg);
 	SendMessage(hMsgDisplay, WM_VSCROLL, SB_BOTTOM, 0);
