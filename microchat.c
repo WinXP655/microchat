@@ -501,7 +501,7 @@ void SendCurrentMessage(HWND hWnd) {
 	int text_len = GetWindowTextA(hEdit, buffer, BUFFER_SIZE - 1);
 	buffer[text_len] = '\0';
 
-	while (text_len > 0 && (buffer[text_len - 1] == '\r' || buffer[text_len - 1] == '\n')) buffer[--text_len] = '\0';
+	while (text_len > 0 && (buffer[text_len - 1] == '\r' || buffer[text_len - 1] == '\n' || buffer[text_len - 1] == '\t' || buffer[text_len - 1] == ' ')) buffer[--text_len] = '\0';
 
 	if (text_len > 0) {
 		char full_msg[BUFFER_SIZE + 128];
