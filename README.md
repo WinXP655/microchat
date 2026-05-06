@@ -16,6 +16,10 @@ No heavy libraries and extra dependencies.
 > MicroChat transmits all data in plain text by default.  
 > If you plan to fork or extend it, it is strongly recommended to add your own encryption layer (XOR/AES/custom protocol).
 
+> **Compatibility Warning:**
+> NT 4.0 have known problems with SSE/SSE2 forced injection for MinGW-w64.
+> Do not run SSE/SSE2 binary because it will crash with STATUS_ILLEGAL_INSTRUCTION error on NT 4.0.
+
 ## Requirements for Building
 For successful compilation and customization you need:
 - **Compiler:** 
