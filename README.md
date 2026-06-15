@@ -1,6 +1,6 @@
 # MicroChat
 
-<img width="506" height="313" alt="image" src="https://github.com/user-attachments/assets/49f07f29-8cfe-4429-9380-fe1e393e4e51" />
+<img width="506" height="313" alt="image" src="https://github.com/user-attachments/assets/2cb991f4-f0e3-4d4f-8301-1814831c30e8" />
 
 **MicroChat** is an open-source and ultra-light chat framework, written on pure C with raw WinAPI. 
 No heavy libraries and extra dependencies.
