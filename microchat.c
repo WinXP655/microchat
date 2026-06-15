@@ -102,7 +102,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 void GetLocalComputerName() {
 	DWORD size = sizeof(computer_name);
-	GetComputerNameA(computer_name, &size);
+	GetComputerName(computer_name, &size);
 }
 
 void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
@@ -114,7 +114,7 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
 	RegisterClass(&wc);
 
 	char title[256];
-	snprintf(title, sizeof(title), "%s", peer_name);
+	snprintf(title, sizeof(title), "MicroChat - %s", peer_name);
 	title[sizeof(title) - 1] = '\0';
 	
 	HWND hWnd = CreateWindow("MicroChatWndClass", title,
@@ -255,7 +255,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			SetLastError(0);
 			g_oldEditProc = (WNDPROC)SetWindowLongPtr(hEdit, GWLP_WNDPROC, (LONG_PTR)EditProc);
 			if (!g_oldEditProc && GetLastError() != 0) {
-				AddMessage("Warning: edit subclass setup failed. Enter and Ctrl+A may not work as expected.");
+				AddMessage("Warning: Edit subclass setup failed. Enter and Ctrl+A may not work as expected.");
 			}
 			return 0;
 		}
