@@ -23,25 +23,25 @@
 // === 3. Global variables ===
 
 // ----- Control flags -----
-bool is_server = false;
-int is_running = 1;
+bool isServer = false;
+int isRunning = 1;
 
 // ----- Network state -----
-SOCKET client_socket = INVALID_SOCKET;
-HANDLE g_hReceiveThread = NULL;
-char server_ip[16] = "";
-char peer_ip[16] = "";
-char peer_name[MAX_COMPUTERNAME_LENGTH + 1];
-char computer_name[MAX_COMPUTERNAME_LENGTH + 1];
+SOCKET clientSocket = INVALID_SOCKET;
+HANDLE receiveThread = NULL;
+char serverIp[16] = "";
+char peerIp[16] = "";
+char peerName[MAX_COMPUTERNAME_LENGTH + 1];
+char computerName[MAX_COMPUTERNAME_LENGTH + 1];
 
 // ----- UI handles -----
 HWND hEdit = NULL;
 HWND hSendBtn = NULL;
 HWND hMsgDisplay = NULL;
-HWND hwnd_global = NULL;
+HWND hWndGlobal = NULL;
 
 // ----- UI resources -----
-WNDPROC g_oldEditProc = NULL;
+WNDPROC oldEditProc = NULL;
 HFONT hFont = NULL;
 HFONT hFontBold = NULL;
 
@@ -71,9 +71,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		MB_YESNOCANCEL);
 
 	if (mode == IDCANCEL) return 0;
-	is_server = (mode == IDYES);
+	isServer = (mode == IDYES);
 
-	if (is_server) {
+	if (isServer) {
 		if (!InitializeNetwork(true, hInstance, nCmdShow)) return 0;
 	} else {
 		INT_PTR dlg = DialogBoxParam(hInstance, MAKEINTRESOURCE(1), NULL, ConnectDialogProc, 0);
@@ -127,8 +127,8 @@ bool GetDefaultIP(char *ip_buffer, size_t size) {
 }
 
 void GetLocalComputerName() {
-	DWORD size = sizeof(computer_name);
-	GetComputerName(computer_name, &size);
+	DWORD size = sizeof(computerName);
+	GetComputerName(computerName, &size);
 }
 
 void AddMessage(const char* msg) {
@@ -145,28 +145,28 @@ void AddMessage(const char* msg) {
 
 void Disconnect() {
 	char leave_msg[256];
-	snprintf(leave_msg, sizeof(leave_msg), "%s left the chat.", computer_name);
+	snprintf(leave_msg, sizeof(leave_msg), "%s left the chat.", computerName);
 
 	AddMessage(leave_msg);
-	if (client_socket != INVALID_SOCKET) send(client_socket, leave_msg, strlen(leave_msg), 0);
+	if (clientSocket != INVALID_SOCKET) send(clientSocket, leave_msg, strlen(leave_msg), 0);
 
-	CleanupAndExit(hwnd_global);
+	CleanupAndExit();
 }
 
 void CleanupAndExit() {
-	is_running = 0;
+	isRunning = 0;
 
-	if (client_socket != INVALID_SOCKET) {
-		shutdown(client_socket, SD_BOTH);
-		closesocket(client_socket);
-		client_socket = INVALID_SOCKET;
+	if (clientSocket != INVALID_SOCKET) {
+		shutdown(clientSocket, SD_BOTH);
+		closesocket(clientSocket);
+		clientSocket = INVALID_SOCKET;
 	}
 
 	// WaitForSingleObject on a thread with a running recv is a bad idea.
 	// It causes deadlock since GUI waits for last data.
-	if (g_hReceiveThread != NULL) {
-		CloseHandle(g_hReceiveThread);
-		g_hReceiveThread = NULL;
+	if (receiveThread != NULL) {
+		CloseHandle(receiveThread);
+		receiveThread = NULL;
 	}
 
 	WSACleanup();
@@ -221,7 +221,7 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 		}
 
 		// Get IP before creating thread, so the value for dialog will be ready.
-		GetDefaultIP(server_ip, sizeof(server_ip));
+		GetDefaultIP(serverIp, sizeof(serverIp));
 
 		// Windows 9x do not allow to start threads with NULL as thread ID (invalid parameter error), so using dummy value.
 		// Windows NT do not require thread ID, so it can be NULL.
@@ -243,37 +243,37 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 				return false;
 			}
 
-			client_socket = temp_client;
-			strcpy(peer_ip, inet_ntoa(client_addr.sin_addr));
+			clientSocket = temp_client;
+			strcpy(peerIp, inet_ntoa(client_addr.sin_addr));
 			break;
 		}
 
 		closesocket(server_fd);
 
-		int recv_len = recv(client_socket, peer_name, sizeof(peer_name) - 1, 0);
+		int recv_len = recv(clientSocket, peerName, sizeof(peerName) - 1, 0);
 		if (recv_len == SOCKET_ERROR || recv_len == 0) {
 			char buffer[256];
 			snprintf(buffer, sizeof(buffer), "Peer name error: %d.", WSAGetLastError());
 			buffer[sizeof(buffer) - 1] = '\0';
 			MessageBox(NULL, buffer, "MicroChat", MB_OK);
-			closesocket(client_socket);
+			closesocket(clientSocket);
 			WSACleanup();
 			return false;
 		}
 
-		peer_name[recv_len] = '\0';
-		if (peer_name[0] == '\0') strcpy(peer_name, "<Unknown>");
+		peerName[recv_len] = '\0';
+		if (peerName[0] == '\0') strcpy(peerName, "<Unknown>");
 
-		send(client_socket, computer_name, strlen(computer_name) + 1, 0);
+		send(clientSocket, computerName, strlen(computerName) + 1, 0);
 		ShowMainWindow(hInstance, nCmdShow);
 
 		char sys_msg[256];
-		snprintf(sys_msg, sizeof(sys_msg), "%s connected from %s.", peer_name, peer_ip);
+		snprintf(sys_msg, sizeof(sys_msg), "%s connected from %s.", peerName, peerIp);
 		sys_msg[sizeof(sys_msg) - 1] = '\0';
 		AddMessage(sys_msg);
 	} else {
-		client_socket = socket(AF_INET, SOCK_STREAM, 0);
-		if (client_socket == INVALID_SOCKET) {
+		clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+		if (clientSocket == INVALID_SOCKET) {
 			char buffer[256];
 			snprintf(buffer, sizeof(buffer), "Socket error: %d.", WSAGetLastError());
 			buffer[sizeof(buffer) - 1] = '\0';
@@ -285,15 +285,15 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 		struct sockaddr_in server_addr = { 0 };
 		server_addr.sin_family = AF_INET;
 		server_addr.sin_port = htons(PORT);
-		server_addr.sin_addr.s_addr = inet_addr(server_ip);
+		server_addr.sin_addr.s_addr = inet_addr(serverIp);
 
-		if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+		if (connect(clientSocket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
 			char buffer[256];
 			snprintf(buffer, sizeof(buffer), "Connect error: %d.", WSAGetLastError());
 			buffer[sizeof(buffer) - 1] = '\0';
 			MessageBox(NULL, buffer, "MicroChat", MB_OK);
 
-			closesocket(client_socket);
+			closesocket(clientSocket);
 			WSACleanup();
 			ExitProcess(1);
 		}
@@ -302,18 +302,18 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 		// On pre-Vista systems it also disable "Weak Host Model" (which can display random network interface instead real).
 		struct sockaddr_in server_info;
 		int len = sizeof(server_info);
-		getsockname(client_socket, (struct sockaddr*)&server_info, &len);
-		strcpy(peer_ip, inet_ntoa(server_info.sin_addr));
+		getsockname(clientSocket, (struct sockaddr*)&server_info, &len);
+		strcpy(peerIp, inet_ntoa(server_info.sin_addr));
 
-		send(client_socket, computer_name, strlen(computer_name)+1, 0);
-		int recv_len = recv(client_socket, peer_name, sizeof(peer_name) - 1, 0);
-		peer_name[recv_len] = '\0';
-		if (peer_name[0] == '\0') strcpy(peer_name, "<Unknown>");
+		send(clientSocket, computerName, strlen(computerName)+1, 0);
+		int recv_len = recv(clientSocket, peerName, sizeof(peerName) - 1, 0);
+		peerName[recv_len] = '\0';
+		if (peerName[0] == '\0') strcpy(peerName, "<Unknown>");
 
 		ShowMainWindow(hInstance, nCmdShow);
 
 		char sys_msg[256];
-		snprintf(sys_msg, sizeof(sys_msg), "Connected to %s.", peer_name);
+		snprintf(sys_msg, sizeof(sys_msg), "Connected to %s.", peerName);
 		sys_msg[sizeof(sys_msg) - 1] = '\0';
 		AddMessage(sys_msg);
 	}
@@ -324,11 +324,11 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 
 	if (hThread == NULL) {
 		MessageBox(NULL, "Failed to start receive thread. MicroChat cannot continue.", "MicroChat", MB_OK);
-		CleanupAndExit(hwnd_global);
+		CleanupAndExit();
 		return false;
 	}
 
-	g_hReceiveThread = hThread;
+	receiveThread = hThread;
 
 	return true;
 }
@@ -339,20 +339,20 @@ unsigned int __stdcall ReceiveMessages(void* arg) {
 	(void)arg;
 	char buffer[BUFFER_SIZE];
 
-	while (is_running) {
-		if (!is_running) break;
-		int bytes = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+	while (isRunning) {
+		if (!isRunning) break;
+		int bytes = recv(clientSocket, buffer, BUFFER_SIZE - 1, 0);
 
 		if (bytes == SOCKET_ERROR) {
 			// SOCKET_ERROR = -1
 			char msg[256] = "Connection with remote computer lost.";
 			AddMessage(msg);
-			is_running = 0;
+			isRunning = 0;
 			break;
 		} else if (bytes == 0) {
 			char msg[256] = "Remote computer has closed the connection.";
 			AddMessage(msg);
-			is_running = 0;
+			isRunning = 0;
 			break;
 		}
 
@@ -384,11 +384,11 @@ void SendCurrentMessage(HWND hWnd) {
 
 	if (text_len > 0) {
 		char full_msg[BUFFER_SIZE + 128];
-		snprintf(full_msg, sizeof(full_msg), "%s: %s", computer_name, buffer);
+		snprintf(full_msg, sizeof(full_msg), "%s: %s", computerName, buffer);
 		full_msg[sizeof(full_msg) - 1] = '\0';
 		AddMessage(full_msg);
 
-		int sent = send(client_socket, full_msg, strlen(full_msg), 0);
+		int sent = send(clientSocket, full_msg, strlen(full_msg), 0);
 		if (sent == SOCKET_ERROR) {
 			char buffer[64];
 			snprintf(buffer, sizeof(buffer), "Send failed: %d", WSAGetLastError());
@@ -399,6 +399,7 @@ void SendCurrentMessage(HWND hWnd) {
 
 	SetWindowTextA(hEdit, "");
 
+	// Remove any lingering Enter key messages.
 	MSG nextMsg;
 	while (PeekMessage(&nextMsg, hWnd, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE)) {
 		if (nextMsg.message == WM_KEYDOWN && nextMsg.wParam == VK_RETURN) continue;
@@ -430,8 +431,8 @@ INT_PTR CALLBACK ConnectDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 						return TRUE;
 					}
 
-					strncpy(server_ip, ip, sizeof(server_ip) - 1);
-					server_ip[sizeof(server_ip) - 1] = '\0';
+					strncpy(serverIp, ip, sizeof(serverIp) - 1);
+					serverIp[sizeof(serverIp) - 1] = '\0';
 					EndDialog(hwnd, IDOK);
 					return TRUE;
 				}
@@ -448,7 +449,7 @@ INT_PTR CALLBACK ConnectDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	if (uMsg == WM_GETDLGCODE) {
-		return DLGC_WANTALLKEYS | CallWindowProc(g_oldEditProc, hWnd, uMsg, wParam, lParam);
+		return DLGC_WANTALLKEYS | CallWindowProc(oldEditProc, hWnd, uMsg, wParam, lParam);
 	} else if (uMsg == WM_KEYDOWN) {
 		// EDIT control do not have native Select All.
 		// This is a Windows limitation - needed to handle it manually.
@@ -460,7 +461,7 @@ LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		// Acting like a normal messengers - Send on Enter, Shift+Enter for new line.
 		if (wParam == VK_RETURN) {
 			if (GetAsyncKeyState(VK_SHIFT) & 0x8000) {
-				return CallWindowProc(g_oldEditProc, hWnd, uMsg, wParam, lParam);
+				return CallWindowProc(oldEditProc, hWnd, uMsg, wParam, lParam);
 			} else {
 				PostMessage(GetParent(hWnd), WM_COMMAND, MAKEWPARAM(ID_SEND, 0), 0);
 				return 0;
@@ -468,7 +469,7 @@ LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	return CallWindowProc(g_oldEditProc, hWnd, uMsg, wParam, lParam);
+	return CallWindowProc(oldEditProc, hWnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -527,8 +528,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 			// Zeroing error code and replacing default key handler. Needed to handle custom ENTER and CTRL+A functions
 			SetLastError(0);
-			g_oldEditProc = (WNDPROC)SetWindowLongPtr(hEdit, GWLP_WNDPROC, (LONG_PTR)EditProc);
-			if (!g_oldEditProc && GetLastError() != 0) {
+			oldEditProc = (WNDPROC)SetWindowLongPtr(hEdit, GWLP_WNDPROC, (LONG_PTR)EditProc);
+			if (!oldEditProc && GetLastError() != 0) {
 				AddMessage("Warning: Edit subclass setup failed. Enter and Ctrl+A may not work as expected.");
 			}
 			return 0;
@@ -586,7 +587,7 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
 	RegisterClass(&wc);
 
 	char title[256];
-	snprintf(title, sizeof(title), "MicroChat - %s", peer_name);
+	snprintf(title, sizeof(title), "MicroChat - %s", peerName);
 	title[sizeof(title) - 1] = '\0';
 	
 	HWND hWnd = CreateWindow("MicroChatWndClass", title,
@@ -601,7 +602,7 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
 		ExitProcess(1);
 	}
 
-	hwnd_global = hWnd;
+	hWndGlobal = hWnd;
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 }
@@ -617,7 +618,7 @@ DWORD WINAPI ShowServerIPMessage(LPVOID lpParam) {
 	snprintf(buffer, sizeof(buffer), 
 		"Server IP: %s\n"
 		"Share with users to connect to server.", 
-		server_ip);
+		serverIp);
 	buffer[sizeof(buffer) - 1] = '\0';
 
 	MessageBox(NULL, buffer, "MicroChat", MB_OK);
