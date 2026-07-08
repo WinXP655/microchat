@@ -33,7 +33,7 @@ For successful compilation and customization you need:
 - **Testing Environment:**
   - Virtual Machines preferred: Windows NT 4.0, 98 SE, XP, 7 through 11.
 
-## Compiling
+## Compiling (using gcc from MinGW-w64 as example)
 
 ### 1. Compiling code
 Run a command for basic binary (you can change any optimization flags):
