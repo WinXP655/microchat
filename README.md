@@ -5,12 +5,15 @@
 **MicroChat** is an open-source and ultra-light chat framework, written on pure C with raw WinAPI. 
 No heavy libraries and extra dependencies.
 
+**Note:** We are eventually dropping Windows 9x compatibility due to how complex is to maintain it.
+Next version will require to have at least **Windows 2000**.
+
 ## Features
-- **No dependencies:** works everywhere (Windows 2000/98 SE - Windows 11).
-- **Lightweight:** single-file executable, low memory footprint.
-- **Pure C implementation:** no external libraries beyond standard Win32 API
-- **Open source:** fully transparent, easy to audit or extend.
-- **Cross-version compatible:** designed to run on legacy and modern systems.
+- **No dependencies:** Works everywhere (Windows 2000/98 SE - Windows 11).
+- **Lightweight:** Single-file executable, low memory footprint.
+- **Pure C implementation:** No external libraries beyond standard Win32 API
+- **Open source:** Fully transparent, easy to audit or extend.
+- **Cross-version compatible:** Designed to run on legacy and modern systems.
 
 > **Security Notice:**
 > MicroChat transmits all data in plain text by default.  
