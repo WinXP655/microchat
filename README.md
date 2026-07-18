@@ -5,11 +5,8 @@
 **MicroChat** is an open-source and ultra-light chat framework, written on pure C with raw WinAPI. 
 No heavy libraries and extra dependencies.
 
-**Note:** We are eventually dropping Windows 9x compatibility due to how complex is to maintain it.
-Next version will require to have at least **Windows 2000**.
-
 ## Features
-- **No dependencies:** Works everywhere (Windows 2000/98 SE - Windows 11).
+- **No dependencies:** Works everywhere (Windows 2000 - Windows 11).
 - **Lightweight:** Single-file executable, low memory footprint.
 - **Pure C implementation:** No external libraries beyond standard Win32 API
 - **Open source:** Fully transparent, easy to audit or extend.
@@ -22,44 +19,32 @@ Next version will require to have at least **Windows 2000**.
 > Compatibility with Windows NT 4.0 has been dropped since it have problems with SSE/SSE2 binaries.
 
 ## Requirements for Building
-For successful compilation and customization you need:
 - **Compiler:** 
   - **GCC/MinGW-w64** (via MSYS2 or Cygwin) — recommended for lightweight builds.
-  - **MSVC** (Visual Studio Build Tools) — alternative for Windows native development.
 - **Resource Editing Tool:** 
-  - **Resource Hacker** (optional) — required only if you want to customize connection dialog or icons.
+  - **Resource Hacker** (optional) — required only if you want to customize connection dialog or icons (not used in build process anymore).
 - **Basic Skills:**
   - Knowledge of **CMD/CLI** navigation.
   - Intermediate understanding of **C programming, WinAPI and WinSock**.
 - **Build Environment:**
-  - Any modern **Windows OS** (Win 10/11 recommended for build tools).
+  - Any **Windows OS** starting from Windows 7 (Win 7, 10, 11 recommended for build tools).
 - **Testing Environment:**
-  - Virtual Machines preferred: Windows NT 4.0, 98 SE, XP, 7 through 11.
+  - Virtual Machines preferred: 2000, XP, 7 through 11.
 
 ## Compiling (using gcc from MinGW-w64 as example)
 
 ### 1. Compiling code
-Run a command for basic binary (you can change any optimization flags):
-```
-gcc microchat.c srvconn_base.o -o microchat.exe -m32 -lws2_32 -lwinmm -mwindows
-```
+- Download or clone this repository.
+- Run `build.bat`.
+  Make sure you have GCC in PATH.
 
-### 2. Preparing resources
-Open file `srvconn.rc` with any text editor (for example, Notepad) and copy its contents.
-
-### 3. Changing default dialog
-- Open **Resource Hacker**.
-- Open compiled `microchat.exe`.
-- Replace `DIALOG` resource with `srvconn.rc` contents you've copied.
-<img width="786" height="433" alt="image" src="https://github.com/user-attachments/assets/0e8ae69b-a9d6-43b8-a9b4-d80351e22a5c" />
-
-### 4. Customization (optional)
+### 2. Customization (optional)
 Using Resource Hacker you also can add:
 - Your icon (Action -> Add an Image or Other Binary Resource)
 - Your version info (Action -> Add using Script Template)
 - And anything else.
 
-## 5. Extend MicroChat
+## 3. Extend MicroChat
 Build anything from this raw engine:
 1. **Copy** `microchat.c` into your project.
 2. **Adapt**: Change the port, swap the UI (Qt/WPF/Console), or strip it for a library.
