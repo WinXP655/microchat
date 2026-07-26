@@ -1,3 +1,8 @@
+**MicroChat (Current, 26 July 2026)**:
+- Added .gitignore.
+- Added /clean, /sym, /help to build system.
+(updated only build system, no main code update)
+
 **MicroChat (Current, 18 July 2026):**:
 - isRunning is now bool.
 - Removed dublicating code.
