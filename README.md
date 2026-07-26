@@ -20,9 +20,9 @@ No heavy libraries and extra dependencies.
 
 ## Requirements for Building
 - **Compiler:** 
-  - **GCC/MinGW-w64** (via MSYS2 or Cygwin) — recommended for lightweight builds.
+  - **GCC/MinGW-w64** (via MSYS2 or Cygwin) - recommended for MicroChat builds.
 - **Resource Editing Tool:** 
-  - **Resource Hacker** (optional) — required only if you want to customize connection dialog or icons (not used in build process anymore).
+  - **Resource Hacker** (optional) - required only if you want to customize connection dialog or icons (not used in build process anymore).
 - **Basic Skills:**
   - Knowledge of **CMD/CLI** navigation.
   - Intermediate understanding of **C programming, WinAPI and WinSock**.
