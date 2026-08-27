@@ -1,3 +1,12 @@
+**MicroChat (Current, 27 August 2026)**:
+- Added debug information.
+  To display it, compile it with /dbg flag.
+  After compile, press Ctrl+D when in message edit.
+- Removed /sym flag - /dbg includes /sym functionality + extra menu.
+- Renamed variables to single style.
+- Added "void" arg to functions which do not accept args.
+- Removed unused IsWindow call from AddMessage.
+
 **MicroChat (Current, 26 July 2026)**:
 - Added .gitignore.
 - Added /clean, /sym, /help to build system.
