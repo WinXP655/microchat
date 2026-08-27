@@ -18,7 +18,7 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
 	RegisterClassW(&wc);
 
 	wchar_t title[256];
-	swprintf(title, sizeof(title) / sizeof(wchar_t), L"MicroChat - %ls", peerName);
+	swprintf(title, sizeof(title) / sizeof(wchar_t), L"MicroChat - %ls", peer_name);
 	title[sizeof(title) / sizeof(wchar_t) - 1] = L'\0';
 	
 	HWND hWnd = CreateWindowW(L"MicroChatWndClass", title,
@@ -163,6 +163,12 @@ LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 				return 0;
 			}
 		}
+
+		// This will not work in release build.
+		if (wParam == 'D' && (GetKeyState(VK_CONTROL) & 0x8000)) {
+				ShowDebugInfo(hWnd);
+				return 0;
+			}
 	}
 
 	return CallWindowProc(oldEditProc, hWnd, uMsg, wParam, lParam);
@@ -218,8 +224,8 @@ INT_PTR CALLBACK ConnectDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 						return TRUE;
 					}
 
-					wcscpy(serverIp, p);
-					serverIp[sizeof(serverIp) / sizeof(wchar_t) - 1] = L'\0';
+					wcscpy(server_ip, p);
+					server_ip[sizeof(server_ip) / sizeof(wchar_t) - 1] = L'\0';
 					EndDialog(hwnd, IDOK);
 					return TRUE;
 				}
@@ -238,14 +244,14 @@ INT_PTR CALLBACK ConnectDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 // so user can share it with others. It is not required for core logic.
 // Because MicroChat do not have gethostbyname fallback (outdated method), UDP hack will return 0.0.0.0.
 // Do not try to connect to 0.0.0.0 since it always fails (works only as source, not destination).
-DWORD WINAPI ShowServerIPMessage(LPVOID lpParam) {
+DWORD WINAPI ShowServerIpMessage(LPVOID lpParam) {
 	(void)lpParam;
 
 	wchar_t buffer[512];
 	swprintf(buffer, sizeof(buffer) / sizeof(wchar_t),
 		L"Host IP: %ls\n"
 		L"Share this IP with others for connection.",
-		serverIp);
+		server_ip);
 	buffer[sizeof(buffer) / sizeof(wchar_t) - 1] = L'\0';
 
 	MessageBoxW(NULL, buffer, L"MicroChat", MB_OK);

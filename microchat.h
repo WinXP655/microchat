@@ -16,14 +16,14 @@
 #define BUFFER_SIZE 8192
 
 // Global variables
-extern bool isServer;
-extern int isRunning;
-extern SOCKET clientSocket;
-extern HANDLE receiveThread;
-extern wchar_t serverIp[16];
-extern wchar_t peerIp[16];
-extern wchar_t peerName[256];
-extern wchar_t computerName[256];
+extern bool is_server;
+extern int is_running;
+extern SOCKET client_socket;
+extern HANDLE receive_thread;
+extern wchar_t server_ip[16];
+extern wchar_t peer_ip[16];
+extern wchar_t peer_name[256];
+extern wchar_t computer_name[256];
 extern HWND hEdit;
 extern HWND hSendBtn;
 extern HWND hMsgDisplay;
@@ -46,6 +46,7 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow);
 INT_PTR CALLBACK ConnectDialogProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK EditProc(HWND, UINT, WPARAM, LPARAM);
-DWORD WINAPI ShowServerIPMessage(LPVOID lpParam);
+DWORD WINAPI ShowServerIpMessage(LPVOID lpParam);
+void ShowDebugInfo(HWND hWnd);
 
 #endif

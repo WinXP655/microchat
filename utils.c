@@ -1,8 +1,8 @@
 #include "microchat.h"
 
-void GetLocalComputerName() {
-	DWORD size = sizeof(computerName) / sizeof(wchar_t);
-	GetComputerNameW(computerName, &size);
+void GetLocalComputerName(void) {
+	DWORD size = sizeof(computer_name) / sizeof(wchar_t);
+	GetComputerNameW(computer_name, &size);
 }
 
 bool GetDefaultIP(wchar_t *ip_buffer, size_t size) {
@@ -35,7 +35,7 @@ bool GetDefaultIP(wchar_t *ip_buffer, size_t size) {
 }
 
 void AddMessage(const wchar_t* msg) {
-	if (!hMsgDisplay || !IsWindow(hMsgDisplay) || !msg || !*msg) return;
+	if (!hMsgDisplay || !msg || !*msg) return;
 	int len = GetWindowTextLengthW(hMsgDisplay);
 	
 	if (len > BUFFER_SIZE) {
@@ -51,20 +51,20 @@ void AddMessage(const wchar_t* msg) {
 	SendMessageW(hMsgDisplay, WM_VSCROLL, SB_BOTTOM, 0);
 }
 
-void CleanupAndExit() {
-	isRunning = 0;
+void CleanupAndExit(void) {
+	is_running = 0;
 
-	if (clientSocket != INVALID_SOCKET) {
-		shutdown(clientSocket, SD_BOTH);
-		closesocket(clientSocket);
-		clientSocket = INVALID_SOCKET;
+	if (client_socket != INVALID_SOCKET) {
+		shutdown(client_socket, SD_BOTH);
+		closesocket(client_socket);
+		client_socket = INVALID_SOCKET;
 	}
 
 	// WaitForSingleObject on a thread with a running recv is a bad idea.
 	// It causes deadlock since GUI waits for last data.
-	if (receiveThread != NULL) {
-		CloseHandle(receiveThread);
-		receiveThread = NULL;
+	if (receive_thread != NULL) {
+		CloseHandle(receive_thread);
+		receive_thread = NULL;
 	}
 
 	WSACleanup();

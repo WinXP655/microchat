@@ -11,7 +11,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	(void)hPrevInstance;
 	(void)lpCmdLine;
 
-	// We get local computer name first, so we will already have it when it will be needed.
+	// We get local computer name first, so we will already have it when it will be used.
 	GetLocalComputerName();
 
 	int mode = MessageBoxW(NULL,
@@ -23,17 +23,17 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		MB_YESNOCANCEL);
 
 	if (mode == IDCANCEL) return 0;
-	isServer = (mode == IDYES);
+	is_server = (mode == IDYES);
 
-	if (isServer) {
+	if (is_server) {
 		if (!InitializeNetwork(true, hInstance, nCmdShow)) return 0;
 	} else {
 		INT_PTR dlg = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(1), NULL, ConnectDialogProc, 0);
 
-		// -1 means dialog failed to create.
+		// -1 = dialog failed to create.
 		if (dlg == -1) {
 			MessageBoxW(NULL, L"Could not load connection dialog.", L"MicroChat", MB_OK);
-			return 0;
+				return 0;
 		}
 
 		if (dlg != IDOK) return 0;

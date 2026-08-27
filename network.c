@@ -1,14 +1,15 @@
 #include "microchat.h"
 
-SOCKET clientSocket = INVALID_SOCKET;
-HANDLE receiveThread = NULL;
-wchar_t serverIp[16] = L"";
-wchar_t peerIp[16] = L"";
-wchar_t peerName[256] = L"";
-wchar_t computerName[256] = L"";
+SOCKET client_socket = INVALID_SOCKET;
+HANDLE receive_thread = NULL;
+wchar_t server_ip[16] = L"";
+wchar_t peer_ip[16] = L"";
+wchar_t peer_name[256] = L"";
+wchar_t computer_name[256] = L"";
+wchar_t server_ip_global[16] = L"127.0.0.1";
 
-bool isServer = false;
-int isRunning = 1;
+bool is_server = false;
+int is_running = 1;
 
 bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 	WSADATA wsa;
@@ -45,9 +46,9 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 		}
 
 		// Get IP before creating thread, so the value for dialog will be ready.
-		GetDefaultIP(serverIp, sizeof(serverIp) / sizeof(wchar_t));
+		GetDefaultIP(server_ip, sizeof(server_ip) / sizeof(wchar_t));
 
-		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowServerIPMessage, NULL, 0, NULL);
+		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowServerIpMessage, NULL, 0, NULL);
 
 		while (1) {
 			struct sockaddr_in client_addr;
@@ -60,13 +61,13 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 				return false;
 			}
 
-			clientSocket = temp_client;
+			client_socket = temp_client;
 
 			// Convert IP from char* to wchar_t
 			char ip_utf8[16];
 			strncpy(ip_utf8, inet_ntoa(client_addr.sin_addr), 15);
 			ip_utf8[15] = '\0';
-			MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, peerIp, sizeof(peerIp) / sizeof(wchar_t));
+			MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, peer_ip, sizeof(peer_ip) / sizeof(wchar_t));
 
 			break;
 		}
@@ -74,32 +75,32 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 		closesocket(server_fd);
 
 		// Receive peer name (UTF-8 -> wchar_t)
-		char peerName_utf8[256];
-		int recv_len = recv(clientSocket, peerName_utf8, sizeof(peerName_utf8) - 1, 0);
+		char peer_name_utf8[256];
+		int recv_len = recv(client_socket, peer_name_utf8, sizeof(peer_name_utf8) - 1, 0);
 		if (recv_len == SOCKET_ERROR || recv_len == 0) {
 			ShowError(L"Peer name failed", WSAGetLastError());
-			closesocket(clientSocket);
+			closesocket(client_socket);
 			WSACleanup();
 			return false;
 		}
 
-		peerName_utf8[recv_len] = '\0';
-		MultiByteToWideChar(CP_UTF8, 0, peerName_utf8, -1, peerName, sizeof(peerName) / sizeof(wchar_t));
-		if (peerName[0] == L'\0') wcscpy(peerName, L"<Unknown>");
+		peer_name_utf8[recv_len] = '\0';
+		MultiByteToWideChar(CP_UTF8, 0, peer_name_utf8, -1, peer_name, sizeof(peer_name) / sizeof(wchar_t));
+		if (peer_name[0] == L'\0') wcscpy(peer_name, L"<Unknown>");
 
 		// Send computer name (wchar_t -> UTF-8)
-		char computerName_utf8[256];
-		WideCharToMultiByte(CP_UTF8, 0, computerName, -1, computerName_utf8, sizeof(computerName_utf8), NULL, NULL);
-		send(clientSocket, computerName_utf8, strlen(computerName_utf8) + 1, 0);
+		char computer_name_utf8[256];
+		WideCharToMultiByte(CP_UTF8, 0, computer_name, -1, computer_name_utf8, sizeof(computer_name_utf8), NULL, NULL);
+		send(client_socket, computer_name_utf8, strlen(computer_name_utf8) + 1, 0);
 
 		ShowMainWindow(hInstance, nCmdShow);
 
 		wchar_t sys_msg[512];
-		swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"%ls connected from %ls.", peerName, peerIp);
+		swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"%ls connected from %ls.", peer_name, peer_ip);
 		AddMessage(sys_msg);
 	} else {
-		clientSocket = socket(AF_INET, SOCK_STREAM, 0);
-		if (clientSocket == INVALID_SOCKET) {
+		client_socket = socket(AF_INET, SOCK_STREAM, 0);
+		if (client_socket == INVALID_SOCKET) {
 			ShowError(L"Socket failed", WSAGetLastError());
 			WSACleanup();
 			ExitProcess(1);
@@ -109,14 +110,14 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 		server_addr.sin_family = AF_INET;
 		server_addr.sin_port = htons(PORT);
 
-		// Convert serverIp (wchar_t) to char* for inet_addr
-		char serverIp_utf8[16];
-		WideCharToMultiByte(CP_UTF8, 0, serverIp, -1, serverIp_utf8, sizeof(serverIp_utf8), NULL, NULL);
-		server_addr.sin_addr.s_addr = inet_addr(serverIp_utf8);
+		// Convert server_ip (wchar_t) to char* for inet_addr
+		char server_ip_utf8[16];
+		WideCharToMultiByte(CP_UTF8, 0, server_ip, -1, server_ip_utf8, sizeof(server_ip_utf8), NULL, NULL);
+		server_addr.sin_addr.s_addr = inet_addr(server_ip_utf8);
 
-		if (connect(clientSocket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+		if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
 			ShowError(L"Connect failed", WSAGetLastError());
-			closesocket(clientSocket);
+			closesocket(client_socket);
 			WSACleanup();
 			ExitProcess(1);
 		}
@@ -125,29 +126,29 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 		// On pre-Vista systems it also disable "Weak Host Model" (which can display random network interface instead real).
 		struct sockaddr_in server_info;
 		int len = sizeof(server_info);
-		getsockname(clientSocket, (struct sockaddr*)&server_info, &len);
+		getsockname(client_socket, (struct sockaddr*)&server_info, &len);
 
 		char ip_utf8[16];
 		strncpy(ip_utf8, inet_ntoa(server_info.sin_addr), 15);
 		ip_utf8[15] = '\0';
-		MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, peerIp, sizeof(peerIp) / sizeof(wchar_t));
+		MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, peer_ip, sizeof(peer_ip) / sizeof(wchar_t));
 
 		// Send computer name (wchar_t -> UTF-8)
-		char computerName_utf8[256];
-		WideCharToMultiByte(CP_UTF8, 0, computerName, -1, computerName_utf8, sizeof(computerName_utf8), NULL, NULL);
-		send(clientSocket, computerName_utf8, strlen(computerName_utf8) + 1, 0);
+		char computer_name_utf8[256];
+		WideCharToMultiByte(CP_UTF8, 0, computer_name, -1, computer_name_utf8, sizeof(computer_name_utf8), NULL, NULL);
+		send(client_socket, computer_name_utf8, strlen(computer_name_utf8) + 1, 0);
 
 		// Receive peer name (UTF-8 -> wchar_t)
-		char peerName_utf8[256];
-		int recv_len = recv(clientSocket, peerName_utf8, sizeof(peerName_utf8) - 1, 0);
-		peerName_utf8[recv_len] = '\0';
-		MultiByteToWideChar(CP_UTF8, 0, peerName_utf8, -1, peerName, sizeof(peerName) / sizeof(wchar_t));
-		if (peerName[0] == L'\0') wcscpy(peerName, L"<Unknown>");
+		char peer_name_utf8[256];
+		int recv_len = recv(client_socket, peer_name_utf8, sizeof(peer_name_utf8) - 1, 0);
+		peer_name_utf8[recv_len] = '\0';
+		MultiByteToWideChar(CP_UTF8, 0, peer_name_utf8, -1, peer_name, sizeof(peer_name) / sizeof(wchar_t));
+		if (peer_name[0] == L'\0') wcscpy(peer_name, L"<Unknown>");
 
 		ShowMainWindow(hInstance, nCmdShow);
 
 		wchar_t sys_msg[512];
-		swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"Connected to %ls.", peerName);
+		swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"Connected to %ls.", peer_name);
 		AddMessage(sys_msg);
 	}
 
@@ -161,7 +162,7 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 		return false;
 	}
 
-	receiveThread = hThread;
+	receive_thread = hThread;
 
 	return true;
 }
@@ -172,19 +173,19 @@ unsigned int __stdcall ReceiveMessages(void* arg) {
 	(void)arg;
 	char buffer[BUFFER_SIZE];
 
-	while (isRunning) {
-		if (!isRunning) break;
-		int bytes = recv(clientSocket, buffer, BUFFER_SIZE - 1, 0);
+	while (is_running) {
+		if (!is_running) break;
+		int bytes = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
 
 		if (bytes == SOCKET_ERROR) {
 			wchar_t msg[256] = L"Connection with remote computer lost.";
 			AddMessage(msg);
-			isRunning = 0;
+			is_running = 0;
 			break;
 		} else if (bytes == 0) {
 			wchar_t msg[256] = L"Remote computer has closed the connection.";
 			AddMessage(msg);
-			isRunning = 0;
+			is_running = 0;
 			break;
 		}
 
@@ -204,7 +205,7 @@ unsigned int __stdcall ReceiveMessages(void* arg) {
 void SendCurrentMessage(HWND hWnd) {
 	// Counting characters including formatting.
 	int msglen = GetWindowTextLengthW(hEdit);
-	int maxallowed = (BUFFER_SIZE - 1) - wcslen(computerName) - 4;
+	int maxallowed = (BUFFER_SIZE - 1) - wcslen(computer_name) - 4;
 	if (msglen > maxallowed) {
 		wchar_t toolong_err[512] = L"Message is too long to send.";
 		AddMessage(toolong_err);
@@ -226,18 +227,21 @@ void SendCurrentMessage(HWND hWnd) {
 	text_len = wcslen(buffer);
 
 	// Trim trailing spaces, tabs, carets and newlines from end.
-	while (text_len > 0 && (buffer[text_len - 1] == L'\r' || buffer[text_len - 1] == L'\n' || buffer[text_len - 1] == L'\t' || buffer[text_len - 1] == L' ')) buffer[--text_len] = L'\0';
+	while (text_len > 0 && (buffer[text_len - 1] == L'\r' ||
+							buffer[text_len - 1] == L'\n' ||
+							buffer[text_len - 1] == L'\t' ||
+							buffer[text_len - 1] == L' ')) buffer[--text_len] = L'\0';
 
 	if (text_len > 0) {
 		wchar_t full_msg[BUFFER_SIZE + 128];
-		swprintf(full_msg, sizeof(full_msg) / sizeof(wchar_t), L"%ls: %ls", computerName, buffer);
+		swprintf(full_msg, sizeof(full_msg) / sizeof(wchar_t), L"%ls: %ls", computer_name, buffer);
 		AddMessage(full_msg);
 
 		// Convert to UTF-8 for transmission
 		char utf8_buffer[BUFFER_SIZE + 128];
 		WideCharToMultiByte(CP_UTF8, 0, full_msg, -1, utf8_buffer, sizeof(utf8_buffer), NULL, NULL);
 
-		int sent = send(clientSocket, utf8_buffer, strlen(utf8_buffer), 0);
+		int sent = send(client_socket, utf8_buffer, strlen(utf8_buffer), 0);
 		if (sent == SOCKET_ERROR) {
 			wchar_t error_msg[64];
 			swprintf(error_msg, sizeof(error_msg) / sizeof(wchar_t), L"Send failed: %d", WSAGetLastError());
@@ -255,16 +259,16 @@ void SendCurrentMessage(HWND hWnd) {
 	}
 }
 
-void Disconnect() {
+void Disconnect(void) {
 	wchar_t leave_msg[512];
-	swprintf(leave_msg, sizeof(leave_msg) / sizeof(wchar_t), L"%ls left the chat.", computerName);
+	swprintf(leave_msg, sizeof(leave_msg) / sizeof(wchar_t), L"%ls left the chat.", computer_name);
 
 	AddMessage(leave_msg);
-	if (clientSocket != INVALID_SOCKET) {
+	if (client_socket != INVALID_SOCKET) {
 		// Convert wchar_t to UTF-8 for network
 		char utf8_msg[512];
 		WideCharToMultiByte(CP_UTF8, 0, leave_msg, -1, utf8_msg, sizeof(utf8_msg), NULL, NULL);
-		send(clientSocket, utf8_msg, strlen(utf8_msg), 0);
+		send(client_socket, utf8_msg, strlen(utf8_msg), 0);
 	}
 
 	CleanupAndExit();
