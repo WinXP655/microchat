@@ -1,4 +1,9 @@
-**MicroChat (Current, 27 August 2026)**:
+**MicroChat (Current, 5 September 2026)**:
+- Fixed some static sizes in swprintf.
+- Removed unneeded extra tab char in main.c.
+- Enlarged buffer for send message error from 32 chars to 256 chars.
+
+**MicroChat (27 August 2026)**:
 - Added debug information.
   To display it, compile it with /dbg flag.
   After compile, press Ctrl+D when in message edit.
