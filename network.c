@@ -19,137 +19,9 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 	}
 
 	if (server_mode) {
-		SOCKET server_fd = socket(AF_INET, SOCK_STREAM, 0);
-		if (server_fd == INVALID_SOCKET) {
-			ShowError(L"Socket failed", WSAGetLastError());
-			WSACleanup();
-			return false;
-		}
-
-		struct sockaddr_in server_addr = {0};
-		server_addr.sin_family = AF_INET;
-		server_addr.sin_addr.s_addr = INADDR_ANY;
-		server_addr.sin_port = htons(PORT);
-
-		if (bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-			ShowError(L"Bind failed", WSAGetLastError());
-			closesocket(server_fd);
-			WSACleanup();
-			return false;
-		}
-
-		if (listen(server_fd, 1) == SOCKET_ERROR) {
-			ShowError(L"Listen failed", WSAGetLastError());
-			closesocket(server_fd);
-			WSACleanup();
-			return false;
-		}
-
-		// Get IP before creating thread, so the value for dialog will be ready.
-		GetDefaultIP(server_ip, sizeof(server_ip) / sizeof(wchar_t));
-
-		CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowServerIpMessage, NULL, 0, NULL);
-
-		while (1) {
-			struct sockaddr_in client_addr;
-			int addr_len = sizeof(client_addr);
-			SOCKET temp_client = accept(server_fd, (struct sockaddr*)&client_addr, &addr_len);
-			if (temp_client == INVALID_SOCKET) {
-				ShowError(L"Listen failed", WSAGetLastError());
-				closesocket(server_fd);
-				WSACleanup();
-				return false;
-			}
-
-			client_socket = temp_client;
-
-			// Convert IP from char* to wchar_t
-			char ip_utf8[16];
-			strncpy(ip_utf8, inet_ntoa(client_addr.sin_addr), 15);
-			ip_utf8[15] = '\0';
-			MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, peer_ip, sizeof(peer_ip) / sizeof(wchar_t));
-
-			break;
-		}
-
-		closesocket(server_fd);
-
-		// Receive peer name (UTF-8 -> wchar_t)
-		char peer_name_utf8[256];
-		int recv_len = recv(client_socket, peer_name_utf8, sizeof(peer_name_utf8) - 1, 0);
-		if (recv_len == SOCKET_ERROR || recv_len == 0) {
-			ShowError(L"Peer name failed", WSAGetLastError());
-			closesocket(client_socket);
-			WSACleanup();
-			return false;
-		}
-
-		peer_name_utf8[recv_len] = '\0';
-		MultiByteToWideChar(CP_UTF8, 0, peer_name_utf8, -1, peer_name, sizeof(peer_name) / sizeof(wchar_t));
-		if (peer_name[0] == L'\0') wcscpy(peer_name, L"<Unknown>");
-
-		// Send computer name (wchar_t -> UTF-8)
-		char computer_name_utf8[256];
-		WideCharToMultiByte(CP_UTF8, 0, computer_name, -1, computer_name_utf8, sizeof(computer_name_utf8), NULL, NULL);
-		send(client_socket, computer_name_utf8, strlen(computer_name_utf8) + 1, 0);
-
-		ShowMainWindow(hInstance, nCmdShow);
-
-		wchar_t sys_msg[512];
-		swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"%ls connected from %ls.", peer_name, peer_ip);
-		AddMessage(sys_msg);
+		StartServer(hInstance, nCmdShow);
 	} else {
-		client_socket = socket(AF_INET, SOCK_STREAM, 0);
-		if (client_socket == INVALID_SOCKET) {
-			ShowError(L"Socket failed", WSAGetLastError());
-			WSACleanup();
-			ExitProcess(1);
-		}
-
-		struct sockaddr_in server_addr = { 0 };
-		server_addr.sin_family = AF_INET;
-		server_addr.sin_port = htons(PORT);
-
-		// Convert server_ip (wchar_t) to char* for inet_addr
-		char server_ip_utf8[16];
-		WideCharToMultiByte(CP_UTF8, 0, server_ip, -1, server_ip_utf8, sizeof(server_ip_utf8), NULL, NULL);
-		server_addr.sin_addr.s_addr = inet_addr(server_ip_utf8);
-
-		if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
-			ShowError(L"Connect failed", WSAGetLastError());
-			closesocket(client_socket);
-			WSACleanup();
-			ExitProcess(1);
-		}
-
-		// Calling getsockname() after connect modify socket type from "soft" to "hard" bind on Vista+ systems.
-		// On pre-Vista systems it also disable "Weak Host Model" (which can display random network interface instead real).
-		struct sockaddr_in server_info;
-		int len = sizeof(server_info);
-		getsockname(client_socket, (struct sockaddr*)&server_info, &len);
-
-		char ip_utf8[16];
-		strncpy(ip_utf8, inet_ntoa(server_info.sin_addr), 15);
-		ip_utf8[15] = '\0';
-		MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, peer_ip, sizeof(peer_ip) / sizeof(wchar_t));
-
-		// Send computer name (wchar_t -> UTF-8)
-		char computer_name_utf8[256];
-		WideCharToMultiByte(CP_UTF8, 0, computer_name, -1, computer_name_utf8, sizeof(computer_name_utf8), NULL, NULL);
-		send(client_socket, computer_name_utf8, strlen(computer_name_utf8) + 1, 0);
-
-		// Receive peer name (UTF-8 -> wchar_t)
-		char peer_name_utf8[256];
-		int recv_len = recv(client_socket, peer_name_utf8, sizeof(peer_name_utf8) - 1, 0);
-		peer_name_utf8[recv_len] = '\0';
-		MultiByteToWideChar(CP_UTF8, 0, peer_name_utf8, -1, peer_name, sizeof(peer_name) / sizeof(wchar_t));
-		if (peer_name[0] == L'\0') wcscpy(peer_name, L"<Unknown>");
-
-		ShowMainWindow(hInstance, nCmdShow);
-
-		wchar_t sys_msg[512];
-		swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"Connected to %ls.", peer_name);
-		AddMessage(sys_msg);
+		StartClient(hInstance, nCmdShow);
 	}
 
 	// _beginthreadex allows us to wait for thread, own it, close its handle and etc. unlike _beginthread, where it is very primitive (no security, thread owning).
@@ -165,6 +37,138 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 	receive_thread = hThread;
 
 	return true;
+}
+
+void StartServer(HINSTANCE hInstance, int nCmdShow) {
+	SOCKET server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (server_fd == INVALID_SOCKET) {
+		ShowError(L"Socket failed", WSAGetLastError());
+		ExitProcess(1);
+	}
+
+	struct sockaddr_in server_addr = {0};
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_addr.s_addr = INADDR_ANY;
+	server_addr.sin_port = htons(PORT);
+
+	if (bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+		ShowError(L"Bind failed", WSAGetLastError());
+		closesocket(server_fd);
+		ExitProcess(1);
+	}
+
+	if (listen(server_fd, 1) == SOCKET_ERROR) {
+		closesocket(server_fd);
+		ExitProcess(1);
+	}
+
+	// Get IP before creating thread, so the value for dialog will be ready.
+	GetDefaultIP(server_ip, sizeof(server_ip) / sizeof(wchar_t));
+
+	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowServerIpMessage, NULL, 0, NULL);
+
+	while (1) {
+		struct sockaddr_in client_addr;
+		int addr_len = sizeof(client_addr);
+		SOCKET temp_client = accept(server_fd, (struct sockaddr*)&client_addr, &addr_len);
+		if (temp_client == INVALID_SOCKET) {
+			continue;
+		}
+
+		client_socket = temp_client;
+
+		// Convert IP from char* to wchar_t
+		char ip_utf8[16];
+		strncpy(ip_utf8, inet_ntoa(client_addr.sin_addr), 15);
+		ip_utf8[15] = '\0';
+		MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, peer_ip, sizeof(peer_ip) / sizeof(wchar_t));
+
+		break;
+	}
+
+	closesocket(server_fd);
+
+	// Receive peer name (UTF-8 -> wchar_t)
+	char peer_name_utf8[256];
+	int recv_len = recv(client_socket, peer_name_utf8, sizeof(peer_name_utf8) - 1, 0);
+	if (recv_len <= 0) {
+		ShowError(L"Peer name failed", WSAGetLastError());
+		closesocket(client_socket);
+		ExitProcess(1);
+	}
+
+	peer_name_utf8[recv_len] = '\0';
+	MultiByteToWideChar(CP_UTF8, 0, peer_name_utf8, -1, peer_name, sizeof(peer_name) / sizeof(wchar_t));
+	if (peer_name[0] == L'\0') wcscpy(peer_name, L"<Unknown>");
+
+	// Send computer name (wchar_t -> UTF-8)
+	char computer_name_utf8[256];
+	WideCharToMultiByte(CP_UTF8, 0, computer_name, -1, computer_name_utf8, sizeof(computer_name_utf8), NULL, NULL);
+	send(client_socket, computer_name_utf8, strlen(computer_name_utf8) + 1, 0);
+
+	ShowMainWindow(hInstance, nCmdShow);
+
+	wchar_t sys_msg[512];
+	swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"%ls connected from %ls.", peer_name, peer_ip);
+	AddMessage(sys_msg);
+}
+
+void StartClient(HINSTANCE hInstance, int nCmdShow) {
+	client_socket = socket(AF_INET, SOCK_STREAM, 0);
+	if (client_socket == INVALID_SOCKET) {
+		ShowError(L"Socket failed", WSAGetLastError());
+		ExitProcess(1);
+	}
+
+	struct sockaddr_in server_addr = { 0 };
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(PORT);
+
+	// Convert server_ip (wchar_t) to char* for inet_addr
+	char server_ip_utf8[16];
+	WideCharToMultiByte(CP_UTF8, 0, server_ip, -1, server_ip_utf8, sizeof(server_ip_utf8), NULL, NULL);
+	server_addr.sin_addr.s_addr = inet_addr(server_ip_utf8);
+
+	if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
+		ShowError(L"Connect failed", WSAGetLastError());
+		closesocket(client_socket);
+		ExitProcess(1);
+	}
+
+	// Calling getsockname() after connect modify socket type from "soft" to "hard" bind on Vista+ systems.
+	// On pre-Vista systems it also disable "Weak Host Model" (which can display random network interface instead real).
+	struct sockaddr_in server_info;
+	int len = sizeof(server_info);
+	getsockname(client_socket, (struct sockaddr*)&server_info, &len);
+
+	char ip_utf8[16];
+	strncpy(ip_utf8, inet_ntoa(server_info.sin_addr), 15);
+	ip_utf8[15] = '\0';
+	MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, peer_ip, sizeof(peer_ip) / sizeof(wchar_t));
+
+	// Send computer name (wchar_t -> UTF-8)
+	char computer_name_utf8[256];
+	WideCharToMultiByte(CP_UTF8, 0, computer_name, -1, computer_name_utf8, sizeof(computer_name_utf8), NULL, NULL);
+	send(client_socket, computer_name_utf8, strlen(computer_name_utf8) + 1, 0);
+
+	// Receive peer name (UTF-8 -> wchar_t)
+	char peer_name_utf8[256];
+	int recv_len = recv(client_socket, peer_name_utf8, sizeof(peer_name_utf8) - 1, 0);
+	if (recv_len <= 0) {
+		ShowError(L"Peer name failed", WSAGetLastError());
+		closesocket(client_socket);
+		ExitProcess(1);
+	}
+
+	peer_name_utf8[recv_len] = '\0';
+	MultiByteToWideChar(CP_UTF8, 0, peer_name_utf8, -1, peer_name, sizeof(peer_name) / sizeof(wchar_t));
+	if (peer_name[0] == L'\0') wcscpy(peer_name, L"<Unknown>");
+
+	ShowMainWindow(hInstance, nCmdShow);
+
+	wchar_t sys_msg[512];
+	swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"Connected to %ls.", peer_name);
+	AddMessage(sys_msg);
 }
 
 // This thread runs asynchronously and pushes updates direcly to UI via AddMessage.
@@ -243,7 +247,7 @@ void SendCurrentMessage(HWND hWnd) {
 
 		int sent = send(client_socket, utf8_buffer, strlen(utf8_buffer), 0);
 		if (sent == SOCKET_ERROR) {
-			wchar_t error_msg[64];
+			wchar_t error_msg[512];
 			swprintf(error_msg, sizeof(error_msg) / sizeof(wchar_t), L"Send failed: %d", WSAGetLastError());
 			AddMessage(error_msg);
 		}

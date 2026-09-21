@@ -38,66 +38,91 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
 	UpdateWindow(hWnd);
 }
 
+void CreateAppFonts(HWND hWnd) {
+	(void)hWnd;
+
+	// MS Shell Dlg is a font alias that resolves to the system default font:
+	//   Western - Microsoft Sans Serif.
+	//   Japanese - MS UI Gothic.
+	//   Korean - Gulim.
+	//   Chinese - SimSun.
+	//
+	// Font size: -12 is not 12pt - it is 9pt (minus sign means "height in device units").
+	// In practice, this often renders as 8pt Microsoft Sans Serif on standard DPI.
+	// To force a specific font size, use a positive font size.
+	LOGFONTW lf = {0};
+	lf.lfHeight = -12;
+	lf.lfWeight = FW_NORMAL;
+	lf.lfCharSet = DEFAULT_CHARSET;
+	lf.lfQuality = DEFAULT_QUALITY;
+	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+	wcscpy(lf.lfFaceName, L"MS Shell Dlg");
+
+	// Regular font
+	hFont = CreateFontIndirectW(&lf);
+
+	// Bold font
+	lf.lfWeight = FW_BOLD;
+	hFontBold = CreateFontIndirectW(&lf);
+}
+
+void CreateAppControls(HWND hWnd) {
+	hMsgDisplay = CreateWindowW(
+		L"EDIT", L"",
+		WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL |
+		ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
+		0, 0, 520, 240,
+		hWnd, (HMENU)ID_MSG_DISPLAY, NULL, NULL
+	);
+
+	hEdit = CreateWindowW(
+		L"EDIT", L"", 
+		WS_CHILD | WS_VISIBLE | WS_BORDER |
+		ES_MULTILINE | ES_WANTRETURN | WS_VSCROLL,
+		0, 240, 430, 30,
+		hWnd, (HMENU)ID_EDIT, NULL, NULL);
+
+	hSendBtn = CreateWindowW(
+		L"BUTTON", L"Send", 
+		WS_CHILD | WS_VISIBLE |
+		BS_PUSHBUTTON,
+		430, 240, 60, 40,
+		hWnd, (HMENU)ID_SEND, NULL, NULL);
+
+	SendMessageW(hMsgDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
+	SendMessageW(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+	SendMessageW(hSendBtn, WM_SETFONT, (WPARAM)hFontBold, TRUE);
+
+	// Zeroing error code and replacing default key handler. Needed to handle custom ENTER and CTRL+A functions
+	SetLastError(0);
+	oldEditProc = (WNDPROC)SetWindowLongPtrW(hEdit, GWLP_WNDPROC, (LONG_PTR)EditProc);
+}
+
+void ResizeMainWindow(HWND hWnd, int width, int height) {
+	(void)hWnd;
+	int edit_height = 30;
+	int send_width = 60;
+
+	SetWindowPos(hMsgDisplay, NULL, 0, 0, width, height - edit_height, SWP_NOZORDER);
+	SetWindowPos(hEdit, NULL, 0, height - edit_height, width - send_width, edit_height, SWP_NOZORDER);
+	SetWindowPos(hSendBtn, NULL, width - send_width, height - edit_height, send_width, edit_height, SWP_NOZORDER);
+}
+
+void CleanupGdi(void) {
+	// First cleanup fonts to prevent GDI leak.
+	DeleteObject(hFont);
+	DeleteObject(hFontBold);
+
+	// Then set its handles to NULL.
+	hFont = NULL;
+	hFontBold = NULL;
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 		case WM_CREATE: {
-			// MS Shell Dlg is a font alias that resolves to the system default font:
-			//   Western - Microsoft Sans Serif.
-			//   Japanese - MS UI Gothic.
-			//   Korean - Gulim.
-			//   Chinese - SimSun.
-			//
-			// Font size: -12 is not 12pt - it is 9pt (minus sign means "height in device units").
-			// In practice, this often renders as 8pt Microsoft Sans Serif on standard DPI.
-			// To force a specific font size, use a positive font size.
-			hFont = CreateFontW(
-				-12, 0, 0, 0, FW_NORMAL,
-				FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-				DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-				L"MS Shell Dlg"
-			);
-
-			hFontBold = CreateFontW(
-				-12, 0, 0, 0, FW_BOLD,
-				FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-				OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-				DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-				L"MS Shell Dlg"
-			);
-
-			hMsgDisplay = CreateWindowW(
-				L"EDIT", L"",
-				WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL |
-				ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-				0, 0, 520, 240,
-				hWnd, (HMENU)ID_MSG_DISPLAY, NULL, NULL
-			);
-
-			hEdit = CreateWindowW(
-				L"EDIT", L"", 
-				WS_CHILD | WS_VISIBLE | WS_BORDER |
-				ES_MULTILINE | ES_WANTRETURN | WS_VSCROLL,
-				0, 240, 430, 30,
-				hWnd, (HMENU)ID_EDIT, NULL, NULL);
-
-			hSendBtn = CreateWindowW(
-				L"BUTTON", L"Send", 
-				WS_CHILD | WS_VISIBLE |
-				BS_PUSHBUTTON,
-				430, 240, 60, 40,
-				hWnd, (HMENU)ID_SEND, NULL, NULL);
-
-			SendMessageW(hMsgDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
-			SendMessageW(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
-			SendMessageW(hSendBtn, WM_SETFONT, (WPARAM)hFontBold, TRUE);
-
-			// Zeroing error code and replacing default key handler. Needed to handle custom ENTER and CTRL+A functions
-			SetLastError(0);
-			oldEditProc = (WNDPROC)SetWindowLongPtrW(hEdit, GWLP_WNDPROC, (LONG_PTR)EditProc);
-			if (!oldEditProc && GetLastError() != 0) {
-				AddMessage(L"Warning: Edit subclass setup failed. Enter and Ctrl+A may not work as expected.");
-			}
+			CreateAppFonts(hWnd);
+			CreateAppControls(hWnd);
 			return 0;
 		}
 
@@ -115,28 +140,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		}
 
 		case WM_DESTROY: {
-			// First cleanup fonts to prevent GDI leak.
-			DeleteObject(hFont);
-			DeleteObject(hFontBold);
-
-			// Then set its handles to NULL.
-			hFont = NULL;
-			hFontBold = NULL;
-
+			CleanupGdi();
 			CleanupAndExit();
 			return 0;
 		}
 		
 		case WM_SIZE: {
-			int w = LOWORD(lParam);
-			int h = HIWORD(lParam);
-
-			int edit_height = 30;
-			int send_width = 60;
-
-			SetWindowPos(hMsgDisplay, NULL, 0, 0, w, h - edit_height, SWP_NOZORDER);
-			SetWindowPos(hEdit, NULL, 0, h - edit_height, w - send_width, edit_height, SWP_NOZORDER);
-			SetWindowPos(hSendBtn, NULL, w - send_width, h - edit_height, send_width, edit_height, SWP_NOZORDER);
+			ResizeMainWindow(hWnd, LOWORD(lParam), HIWORD(lParam));
 			return 0;
 		}
 	}
