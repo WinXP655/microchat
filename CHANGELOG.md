@@ -1,6 +1,6 @@
 **MicroChat (Current, 21 September 2026)**:
-- Separated large parts of some functions into smaller functions.
-  InitializeNetwork -> InitializeNetwork, StartServer, StartClient
+- Separated large parts of some functions into smaller functions.\
+  InitializeNetwork -> InitializeNetwork, StartServer, StartClient\
   WndProc -> WndProc, CreateAppFonts, CreateAppControls, CleanupGdi, ResizeMainWindow
 - Removed error message for listen, subclassing.
 - Added optimization flags: -Os -ffunction-sections -fdata-sections
@@ -11,8 +11,8 @@
 - Enlarged buffer for send message error from 32 chars to 256 chars.
 
 **MicroChat (27 August 2026)**:
-- Added debug information.
-  To display it, compile it with /dbg flag.
+- Added debug information.\
+  To display it, compile it with /dbg flag.\
   After compile, press Ctrl+D when in message edit.
 - Removed /sym flag - /dbg includes /sym functionality + extra menu.
 - Renamed variables to single style.
@@ -21,7 +21,7 @@
 
 **MicroChat (Current, 26 July 2026)**:
 - Added .gitignore.
-- Added /clean, /sym, /help to build system.
+- Added /clean, /sym, /help to build system.\
 (updated only build system, no main code update)
 
 **MicroChat (Current, 18 July 2026):**:
