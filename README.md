@@ -33,6 +33,14 @@ No features are plannced, but t serves as a stable, lightweight baseline and fra
 - **Testing Environment:**
   - Virtual Machines preferred: 2000, XP, 7 through 11.
 
+## Use Cases
+1. **Base for custom chat application**: Adapt the port, UI and build your own messenger.
+2. **Learning Win32 and WinSock**: Minimal, readbale example of TCP sockets, threading an Win32 UI.
+3. **Embedded chat in tools**: Add a simple chat window ino your application.
+4. **Legacy system development**: Works on Windows 2000 and newer.
+5. **Educational projects**: Study how a chat framework works internally.
+6. **Rapid prototyping**: Test network logic without writing full application.
+
 ## Compiling (using gcc from MinGW-w64 as example)
 
 ### 1. Compiling code
