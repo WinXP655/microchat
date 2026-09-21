@@ -1,4 +1,11 @@
-**MicroChat (Current, 5 September 2026)**:
+**MicroChat (Current, 21 September 2026)**:
+- Separated large parts of some functions into smaller functions.
+  InitializeNetwork -> InitializeNetwork, StartServer, StartClient
+  WndProc -> WndProc, CreateAppFonts, CreateAppControls, CleanupGdi, ResizeMainWindow
+- Removed error message for listen, subclassing.
+- Added optimization flags: -Os -ffunction-sections -fdata-sections
+
+**MicroChat (5 September 2026)**:
 - Fixed some static sizes in swprintf.
 - Removed unneeded extra tab char in main.c.
 - Enlarged buffer for send message error from 32 chars to 256 chars.
