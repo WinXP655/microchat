@@ -1,11 +1,18 @@
+// Header for MicroChat building from source.
+// Official repository: https://github.com/WinXP655/microchat.
+// Distributed under MIT license.
 #ifndef MICROCHAT_H
-#define MICROCHAT_H
 
+#define MICROCHAT_H
+#define _WIN32_WINNT 0x0500
+
+// Includes
 #include <winsock2.h>
 #include <windows.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <process.h>
+#include <wchar.h>
 
 // Defines
 #define ID_EDIT 101

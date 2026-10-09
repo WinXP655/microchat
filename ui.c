@@ -41,6 +41,10 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
 void CreateAppFonts(HWND hWnd) {
 	(void)hWnd;
 
+	HDC hdc = GetDC(hWnd);
+	int dpi = GetDeviceCaps(hdc, LOGPIXELSY);
+	ReleaseDC(hWnd, hdc);
+
 	// MS Shell Dlg is a font alias that resolves to the system default font:
 	//   Western - Microsoft Sans Serif.
 	//   Japanese - MS UI Gothic.
@@ -51,7 +55,7 @@ void CreateAppFonts(HWND hWnd) {
 	// In practice, this often renders as 8pt Microsoft Sans Serif on standard DPI.
 	// To force a specific font size, use a positive font size.
 	LOGFONTW lf = {0};
-	lf.lfHeight = -12;
+	lf.lfHeight = -MulDiv(8, dpi, 72);
 	lf.lfWeight = FW_NORMAL;
 	lf.lfCharSet = DEFAULT_CHARSET;
 	lf.lfQuality = DEFAULT_QUALITY;
@@ -154,6 +158,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	if (uMsg == WM_CHAR) {
+		if (wParam == VK_TAB) return 0;
+
+		if (wParam == VK_RETURN) {
+			if(!(GetAsyncKeyState(VK_SHIFT) & 0x8000)) {
+				return 0;
+			}
+		}
+	}
+
 	if (uMsg == WM_GETDLGCODE) {
 		return DLGC_WANTALLKEYS | CallWindowProc(oldEditProc, hWnd, uMsg, wParam, lParam);
 	} else if (uMsg == WM_KEYDOWN) {
@@ -174,7 +188,8 @@ LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 			}
 		}
 
-		// This will not work in release build.
+		// This will not work in release build - it trigger debug dialog which
+		// display internal values. In release, code responsible for this dialog is removed.
 		if (wParam == 'D' && (GetKeyState(VK_CONTROL) & 0x8000)) {
 				ShowDebugInfo(hWnd);
 				return 0;

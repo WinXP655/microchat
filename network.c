@@ -72,6 +72,11 @@ void StartServer(HINSTANCE hInstance, int nCmdShow) {
 		int addr_len = sizeof(client_addr);
 		SOCKET temp_client = accept(server_fd, (struct sockaddr*)&client_addr, &addr_len);
 		if (temp_client == INVALID_SOCKET) {
+			DWORD err = WSAGetLastError();
+			if (err == WSAEINTR || err == WSAENOTSOCK) {
+				break;
+			}
+			Sleep(100);
 			continue;
 		}
 
@@ -139,12 +144,14 @@ void StartClient(HINSTANCE hInstance, int nCmdShow) {
 	// On pre-Vista systems it also disable "Weak Host Model" (which can display random network interface instead real).
 	struct sockaddr_in server_info;
 	int len = sizeof(server_info);
-	getsockname(client_socket, (struct sockaddr*)&server_info, &len);
-
-	char ip_utf8[16];
-	strncpy(ip_utf8, inet_ntoa(server_info.sin_addr), 15);
-	ip_utf8[15] = '\0';
-	MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, peer_ip, sizeof(peer_ip) / sizeof(wchar_t));
+	if (getsockname(client_socket, (struct sockaddr*)&server_info, &len) != 0) {
+		wcscpy(peer_ip, L"<Unknown>");
+	} else {
+		char ip_utf8[16];
+		strncpy(ip_utf8, inet_ntoa(server_info.sin_addr), 15);
+		ip_utf8[15] = '\0';
+		MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, peer_ip, sizeof(peer_ip) / sizeof(wchar_t));
+	}
 
 	// Send computer name (wchar_t -> UTF-8)
 	char computer_name_utf8[256];

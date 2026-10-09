@@ -36,13 +36,16 @@ bool GetDefaultIP(wchar_t *ip_buffer, size_t size) {
 
 void AddMessage(const wchar_t* msg) {
 	if (!hMsgDisplay || !msg || !*msg) return;
-	int len = GetWindowTextLengthW(hMsgDisplay);
-	
-	if (len > BUFFER_SIZE) {
-		AddMessage(L"Message is too long for display.");
-		return;
+
+	if (wcslen(msg) >= BUFFER_SIZE) {
+		wchar_t truncated[BUFFER_SIZE];
+		wcsncpy(truncated, msg, BUFFER_SIZE -20);
+		truncated[BUFFER_SIZE - 20] = L'\0';
+		wcscat(truncated, L"... [truncated]");
+		AddMessage(truncated);
 	}
 
+	int len = GetWindowTextLengthW(hMsgDisplay);
 	SendMessageW(hMsgDisplay, EM_SETSEL, len, len);
 
 	// Using EM_REPLACESEL instead SetWindowText to add string without overwriting entire buffer.
@@ -73,6 +76,6 @@ void CleanupAndExit(void) {
 
 void ShowError(const wchar_t* msg, DWORD err) {
 	wchar_t buffer[512];
-	swprintf(buffer, 512, L"%ls: %lu", msg, err);
+	swprintf(buffer, sizeof(buffer) / sizeof(wchar_t), L"%ls: %lu", msg, err);
 	MessageBoxW(NULL, buffer, L"MicroChat", MB_OK);
 }
