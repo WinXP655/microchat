@@ -1,4 +1,15 @@
-**MicroChat (Current, 21 September 2026)**:
+**MicroChat (Current, 9 October 2026)**:
+- Added loop exit in accept error loop.
+- Added a 100ms timeout before trying accept again in StartServer().
+- Fixed wcscpy in StartClient() without size check.
+- Added truncating large message in AddMessage().
+- Added _WIN32_WINNT define to start of header file.
+- Added checking getsockname() result in StartClient().
+- Added explicit wchar.h header for wide functions.
+- Added truncating long message instead preventing showing.
+- Added suppressing Tab and Enter as characters.
+
+**MicroChat (21 September 2026)**:
 - Separated large parts of some functions into smaller functions.\
   InitializeNetwork -> InitializeNetwork, StartServer, StartClient\
   WndProc -> WndProc, CreateAppFonts, CreateAppControls, CleanupGdi, ResizeMainWindow
