@@ -1,4 +1,18 @@
-**MicroChat (Current, 9 October 2026)**:
+**MicroChat (Current, 17 October 2026)**:
+- Fixed recursive AddMessage call.
+- Added setting subsystem version to 5.0 (Windows 2000) in build script.
+- Added WaitForSingleObject to CleanupAndExit using method that doesn't hang app.
+- Added check for connect and getsockname in GetDefaultIP.
+- Replaced ExitProcess with returning false.
+- Simplified InitializeNetwork mode choice.
+- StartServer and StartClient changed to bool.
+- Added setting 5 seconds timeout to server side.
+- Added setting client_socket to INVALID_SOCKET after closesocket.
+- Added check of MultiByteToWideChar.
+- Removed unused server_ip_global.
+- Replaced direct AddMessage with wrapper UIAddMessage.
+
+**MicroChat (9 October 2026)**:
 - Added loop exit in accept error loop.
 - Added a 100ms timeout before trying accept again in StartServer().
 - Fixed wcscpy in StartClient() without size check.
