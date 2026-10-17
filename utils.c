@@ -17,12 +17,18 @@ bool GetDefaultIP(wchar_t *ip_buffer, size_t size) {
 	remote.sin_addr.s_addr = inet_addr("8.8.8.8"); // Google DNS, but works with any reachable IP.
 
 	// UDP hack: connect() on UDP keep address in memory...
-	connect(s, (struct sockaddr*)&remote, sizeof(remote));
+	if (connect(s, (struct sockaddr*)&remote, sizeof(remote)) != 0) {
+		closesocket(s);
+		return false;
+	}
 
 	// ... and then getsockname() return local IP address which will be displayed.
 	struct sockaddr_in local;
 	int len = sizeof(local);
-	getsockname(s, (struct sockaddr*)&local, &len);
+	if (getsockname(s, (struct sockaddr*)&local, &len) != 0) {
+		closesocket(s);
+		return false;
+	}
 
 	closesocket(s);
 
@@ -37,12 +43,14 @@ bool GetDefaultIP(wchar_t *ip_buffer, size_t size) {
 void AddMessage(const wchar_t* msg) {
 	if (!hMsgDisplay || !msg || !*msg) return;
 
+	const wchar_t* to_display = msg;
+	wchar_t truncated[BUFFER_SIZE];
+
 	if (wcslen(msg) >= BUFFER_SIZE) {
-		wchar_t truncated[BUFFER_SIZE];
-		wcsncpy(truncated, msg, BUFFER_SIZE -20);
+		wcsncpy(truncated, msg, BUFFER_SIZE - 20);
 		truncated[BUFFER_SIZE - 20] = L'\0';
 		wcscat(truncated, L"... [truncated]");
-		AddMessage(truncated);
+		to_display = truncated;
 	}
 
 	int len = GetWindowTextLengthW(hMsgDisplay);
@@ -50,7 +58,7 @@ void AddMessage(const wchar_t* msg) {
 
 	// Using EM_REPLACESEL instead SetWindowText to add string without overwriting entire buffer.
 	if (len > 0) SendMessageW(hMsgDisplay, EM_REPLACESEL, FALSE, (LPARAM)L"\r\n");
-	SendMessageW(hMsgDisplay, EM_REPLACESEL, FALSE, (LPARAM)msg);
+	SendMessageW(hMsgDisplay, EM_REPLACESEL, FALSE, (LPARAM)to_display);
 	SendMessageW(hMsgDisplay, WM_VSCROLL, SB_BOTTOM, 0);
 }
 
@@ -63,11 +71,17 @@ void CleanupAndExit(void) {
 		client_socket = INVALID_SOCKET;
 	}
 
-	// WaitForSingleObject on a thread with a running recv is a bad idea.
-	// It causes deadlock since GUI waits for last data.
+	// WaitFotSingleObject can be used on recv thread without hang
+	// in this order: shutdown - wait - close socket
 	if (receive_thread != NULL) {
+		WaitForSingleObject(receive_thread, 3000);
 		CloseHandle(receive_thread);
 		receive_thread = NULL;
+	}
+
+	if (client_socket != INVALID_SOCKET) {
+		closesocket(client_socket);
+		client_socket = INVALID_SOCKET;
 	}
 
 	WSACleanup();

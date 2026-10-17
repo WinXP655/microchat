@@ -124,33 +124,34 @@ void CleanupGdi(void) {
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
-		case WM_CREATE: {
+		case WM_CREATE:
 			CreateAppFonts(hWnd);
 			CreateAppControls(hWnd);
 			return 0;
-		}
 
-		case WM_COMMAND: {
+		case WM_COMMAND:
 			if (LOWORD(wParam) == ID_SEND) {
 				SendCurrentMessage(hWnd);
 				SetFocus(hEdit);
 			}
 			return 0;
-		}
 
-		case WM_CLOSE: {
+		case WM_CLOSE:
 			Disconnect();
 			return 0;
-		}
 
-		case WM_DESTROY: {
+		case WM_DESTROY:
 			CleanupGdi();
 			CleanupAndExit();
 			return 0;
-		}
 		
-		case WM_SIZE: {
+		case WM_SIZE:
 			ResizeMainWindow(hWnd, LOWORD(lParam), HIWORD(lParam));
+			return 0;
+		
+		case WM_APP_ADDMSG: {
+			wchar_t* m = (wchar_t*)lParam;
+			if (m) { AddMessage(m); free(m); }
 			return 0;
 		}
 	}
@@ -191,9 +192,9 @@ LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		// This will not work in release build - it trigger debug dialog which
 		// display internal values. In release, code responsible for this dialog is removed.
 		if (wParam == 'D' && (GetKeyState(VK_CONTROL) & 0x8000)) {
-				ShowDebugInfo(hWnd);
-				return 0;
-			}
+			ShowDebugInfo(hWnd);
+			return 0;
+		}
 	}
 
 	return CallWindowProc(oldEditProc, hWnd, uMsg, wParam, lParam);
@@ -263,6 +264,14 @@ INT_PTR CALLBACK ConnectDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 	}
 
 	return FALSE;
+}
+
+// This is a wrapper around window procedure, so network can't touch user interface directly.
+void UIAddMessage(const wchar_t* msg) {
+	if (!hWndGlobal || !msg) return;
+	wchar_t* copy = _wcsdup(msg);
+	if (!copy) return;
+	if (!PostMessageW(hWndGlobal, WM_APP_ADDMSG, 0, (LPARAM)copy)) free(copy);
 }
 
 // This is a purely informational dialog - it shows server IP,

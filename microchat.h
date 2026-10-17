@@ -21,6 +21,7 @@
 #define IDC_IP 1001
 #define PORT 1723
 #define BUFFER_SIZE 8192
+#define WM_APP_ADDMSG (WM_APP + 1)
 
 // Global variables
 extern bool is_server;
@@ -42,8 +43,8 @@ extern HFONT hFontBold;
 // Prototypes
 void GetLocalComputerName(void);
 bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow);
-void StartServer(HINSTANCE hInstance, int nCmdShow);
-void StartClient(HINSTANCE hInstance, int nCmdShow);
+bool StartServer(HINSTANCE hInstance, int nCmdShow);
+bool StartClient(HINSTANCE hInstance, int nCmdShow);
 bool GetDefaultIP(wchar_t* ip_buffer, size_t size);
 void AddMessage(const wchar_t* msg);
 void CleanupAndExit(void);
@@ -60,6 +61,7 @@ void ResizeMainWindow(HWND hWnd, int width, int height);
 void CleanupGdi(void);
 LRESULT CALLBACK EditProc(HWND, UINT, WPARAM, LPARAM);
 DWORD WINAPI ShowServerIpMessage(LPVOID lpParam);
+void UIAddMessage(const wchar_t* msg);
 void ShowDebugInfo(HWND hWnd);
 
 #endif

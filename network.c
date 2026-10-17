@@ -6,7 +6,6 @@ wchar_t server_ip[16] = L"";
 wchar_t peer_ip[16] = L"";
 wchar_t peer_name[256] = L"";
 wchar_t computer_name[256] = L"";
-wchar_t server_ip_global[16] = L"127.0.0.1";
 
 bool is_server = false;
 int is_running = 1;
@@ -15,13 +14,14 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
 		ShowError(L"WSAStartup failed", WSAGetLastError());
-		ExitProcess(1);
+		return false;
 	}
 
-	if (server_mode) {
-		StartServer(hInstance, nCmdShow);
-	} else {
-		StartClient(hInstance, nCmdShow);
+	bool result = server_mode ? StartServer(hInstance, nCmdShow) : StartClient(hInstance, nCmdShow);
+
+	if (!result) {
+		WSACleanup();
+		return false;
 	}
 
 	// _beginthreadex allows us to wait for thread, own it, close its handle and etc. unlike _beginthread, where it is very primitive (no security, thread owning).
@@ -39,11 +39,11 @@ bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 	return true;
 }
 
-void StartServer(HINSTANCE hInstance, int nCmdShow) {
+bool StartServer(HINSTANCE hInstance, int nCmdShow) {
 	SOCKET server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (server_fd == INVALID_SOCKET) {
 		ShowError(L"Socket failed", WSAGetLastError());
-		ExitProcess(1);
+		return false;
 	}
 
 	struct sockaddr_in server_addr = {0};
@@ -54,17 +54,16 @@ void StartServer(HINSTANCE hInstance, int nCmdShow) {
 	if (bind(server_fd, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
 		ShowError(L"Bind failed", WSAGetLastError());
 		closesocket(server_fd);
-		ExitProcess(1);
+		return false;
 	}
 
 	if (listen(server_fd, 1) == SOCKET_ERROR) {
 		closesocket(server_fd);
-		ExitProcess(1);
+		return false;
 	}
 
 	// Get IP before creating thread, so the value for dialog will be ready.
 	GetDefaultIP(server_ip, sizeof(server_ip) / sizeof(wchar_t));
-
 	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ShowServerIpMessage, NULL, 0, NULL);
 
 	while (1) {
@@ -79,6 +78,9 @@ void StartServer(HINSTANCE hInstance, int nCmdShow) {
 			Sleep(100);
 			continue;
 		}
+
+		struct timeval tv = {5, 0};
+		setsockopt(temp_client, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv));
 
 		client_socket = temp_client;
 
@@ -99,7 +101,8 @@ void StartServer(HINSTANCE hInstance, int nCmdShow) {
 	if (recv_len <= 0) {
 		ShowError(L"Peer name failed", WSAGetLastError());
 		closesocket(client_socket);
-		ExitProcess(1);
+		client_socket = INVALID_SOCKET;
+		return false;
 	}
 
 	peer_name_utf8[recv_len] = '\0';
@@ -111,18 +114,22 @@ void StartServer(HINSTANCE hInstance, int nCmdShow) {
 	WideCharToMultiByte(CP_UTF8, 0, computer_name, -1, computer_name_utf8, sizeof(computer_name_utf8), NULL, NULL);
 	send(client_socket, computer_name_utf8, strlen(computer_name_utf8) + 1, 0);
 
+	struct timeval no_timeout = {0, 0};
+	setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&no_timeout, sizeof(no_timeout));
+
 	ShowMainWindow(hInstance, nCmdShow);
 
 	wchar_t sys_msg[512];
 	swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"%ls connected from %ls.", peer_name, peer_ip);
 	AddMessage(sys_msg);
+	return true;
 }
 
-void StartClient(HINSTANCE hInstance, int nCmdShow) {
+bool StartClient(HINSTANCE hInstance, int nCmdShow) {
 	client_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (client_socket == INVALID_SOCKET) {
 		ShowError(L"Socket failed", WSAGetLastError());
-		ExitProcess(1);
+		return false;
 	}
 
 	struct sockaddr_in server_addr = { 0 };
@@ -137,7 +144,8 @@ void StartClient(HINSTANCE hInstance, int nCmdShow) {
 	if (connect(client_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) == SOCKET_ERROR) {
 		ShowError(L"Connect failed", WSAGetLastError());
 		closesocket(client_socket);
-		ExitProcess(1);
+		client_socket = INVALID_SOCKET;
+		return false;
 	}
 
 	// Calling getsockname() after connect modify socket type from "soft" to "hard" bind on Vista+ systems.
@@ -164,7 +172,8 @@ void StartClient(HINSTANCE hInstance, int nCmdShow) {
 	if (recv_len <= 0) {
 		ShowError(L"Peer name failed", WSAGetLastError());
 		closesocket(client_socket);
-		ExitProcess(1);
+		client_socket = INVALID_SOCKET;
+		return false;
 	}
 
 	peer_name_utf8[recv_len] = '\0';
@@ -176,6 +185,7 @@ void StartClient(HINSTANCE hInstance, int nCmdShow) {
 	wchar_t sys_msg[512];
 	swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"Connected to %ls.", peer_name);
 	AddMessage(sys_msg);
+	return true;
 }
 
 // This thread runs asynchronously and pushes updates direcly to UI via AddMessage.
@@ -189,13 +199,13 @@ unsigned int __stdcall ReceiveMessages(void* arg) {
 		int bytes = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
 
 		if (bytes == SOCKET_ERROR) {
-			wchar_t msg[256] = L"Connection with remote computer lost.";
-			AddMessage(msg);
+			int err = WSAGetLastError();
+			if (err == WSAETIMEDOUT) continue;
+			UIAddMessage(L"Connection with remote computer lost.");
 			is_running = 0;
 			break;
 		} else if (bytes == 0) {
-			wchar_t msg[256] = L"Remote computer has closed the connection.";
-			AddMessage(msg);
+			UIAddMessage(L"Remote computer has closed the connection.");
 			is_running = 0;
 			break;
 		}
@@ -204,10 +214,10 @@ unsigned int __stdcall ReceiveMessages(void* arg) {
 
 		// Convert received buffer to Unicode for display
 		wchar_t wbuffer[BUFFER_SIZE];
-		MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, BUFFER_SIZE);
+		if (MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, BUFFER_SIZE) <= 0) continue;
 
 		MessageBeep(MB_OK);
-		AddMessage(wbuffer);
+		UIAddMessage(wbuffer);
 	}
 
 	return 0;
@@ -217,6 +227,8 @@ void SendCurrentMessage(HWND hWnd) {
 	// Counting characters including formatting.
 	int msglen = GetWindowTextLengthW(hEdit);
 	int maxallowed = (BUFFER_SIZE - 1) - wcslen(computer_name) - 4;
+	if (maxallowed < 1) maxallowed = 1;
+
 	if (msglen > maxallowed) {
 		wchar_t toolong_err[512] = L"Message is too long to send.";
 		AddMessage(toolong_err);
