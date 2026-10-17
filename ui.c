@@ -151,7 +151,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 		
 		case WM_APP_ADDMSG: {
 			wchar_t* m = (wchar_t*)lParam;
-			if (m) { AddMessage(m); free(m); }
+			if (m) {
+				AddMessage(m);
+				free(m);
+			}
 			return 0;
 		}
 	}
