@@ -1,4 +1,19 @@
-**MicroChat (Current, 17 October 2026)**:
+**MicroChat (Current, 6 November 2026)**:
+- Replaced magic numbers with defines.
+- Replaced hardcoded window size with DEFAULT_WIN_WIDTH and DEFAULT_WIN_HEIGHT macros.
+- Fixed playing default beep while using Ctrl+A.
+- Extracted IP validation from ConnectDialogProc into a separate ValidateAndSetIP.
+- Removed redundant is_running check inside ReceiveMessages loop.
+- Replaced direct is_running access with InterlockedExchange / InterlockedCompareExchange.
+- Added Trim helper for trimming spaces, tabs, CR and LF from both ends.
+- Added TrimIncompleteUTF8 helper for trimming incomplete UTF-8 at buffer end.
+- Changed is_running type from int to volatile LONG.
+
+Build script updates:
+- Renamed debug build to microchat_dbg.exe
+- Dialog is now compiled as Unicode instead ANSI.
+
+**MicroChat (17 October 2026)**:
 - Fixed recursive AddMessage call.
 - Added setting subsystem version to 5.0 (Windows 2000) in build script.
 - Added WaitForSingleObject to CleanupAndExit using method that doesn't hang app.
