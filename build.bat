@@ -45,7 +45,7 @@ if exist microchat.exe (
 )
 
 echo Building dialog...
-windres --target=pe-i386 servconn.rc -o servconn.o
+windres -c 65001 --target=pe-i386 servconn.rc -o servconn.o
 if %errorlevel% neq 0 (
     echo [ERROR] Dialog FAILED
     exit /b 1
@@ -55,12 +55,12 @@ echo [OK] Dialog built
 echo Compiling MicroChat...
 if %DBG%==1 (
     echo + embedding Debug symbols
-    gcc main.c network.c ui.c utils.c servconn.o debug.c -o microchat.exe -m32 -lgdi32 -lws2_32 -lcomctl32 -mwindows -Wall -Wextra -municode -D_DEBUG -Wl,--gc-sections 
+    gcc main.c network.c ui.c utils.c servconn.o debug.c -o microchat_dbg.exe -m32 -lgdi32 -lws2_32 -lcomctl32 -mwindows -Wall -Wextra -municode -D_DEBUG -Wl,--gc-sections 
     if %errorlevel% neq 0 (
         echo [ERROR] Build FAILED
         exit /b 1
     )
-    echo [OK] Build successful: microchat.exe ^(debug^)
+    echo [OK] Build successful: microchat_dbg.exe ^(debug^)
     goto end
 )
 

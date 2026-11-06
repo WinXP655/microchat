@@ -1,3 +1,5 @@
+// Module: User Interface (ui.c)
+// Part of MicroChat: https://github.com/WinXP655/microchat
 #include "microchat.h"
 
 HWND hEdit = NULL;
@@ -13,7 +15,7 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
 	wc.lpfnWndProc = WndProc;
 	wc.hInstance = hInstance;
 	wc.lpszClassName = L"MicroChatWndClass";
-	wc.hIcon = LoadIconW(NULL, IDI_APPLICATION); // Generic application icon from user32.dll
+	wc.hIcon = LoadIconW(NULL, IDI_APPLICATION); // Generic application icon from user32.dll, ID 100
 	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 	RegisterClassW(&wc);
 
@@ -23,7 +25,7 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
 	
 	HWND hWnd = CreateWindowW(L"MicroChatWndClass", title,
 		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_THICKFRAME | WS_MAXIMIZEBOX,
-		CW_USEDEFAULT, CW_USEDEFAULT, 520, 320,
+		CW_USEDEFAULT, CW_USEDEFAULT, DEFAULT_WIN_WIDTH, DEFAULT_WIN_HEIGHT,
 		NULL, NULL, hInstance, NULL);
 
 	// Here using ExitProcess because this event is critical.
@@ -163,13 +165,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	if (uMsg == WM_CHAR) {
+		if (wParam == 1 && (GetKeyState(VK_CONTROL) & 0x8000)) return 0;
 		if (wParam == VK_TAB) return 0;
-
-		if (wParam == VK_RETURN) {
-			if(!(GetAsyncKeyState(VK_SHIFT) & 0x8000)) {
-				return 0;
-			}
-		}
+		if (wParam == VK_RETURN && !(GetAsyncKeyState(VK_SHIFT) & 0x8000)) return 0;
 	}
 
 	if (uMsg == WM_GETDLGCODE) {
@@ -203,6 +201,40 @@ LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	return CallWindowProc(oldEditProc, hWnd, uMsg, wParam, lParam);
 }
 
+BOOL ValidateAndSetIP(HWND hwnd) {
+	wchar_t ip[16];
+	GetDlgItemTextW(hwnd, IDC_IP, ip, sizeof(ip) / sizeof(wchar_t));
+
+	wchar_t* p = Trim(ip);
+
+	if (*p == L'\0') {
+		MessageBoxW(hwnd, L"Please enter a server IP.", L"MicroChat", MB_OK);
+		return FALSE;
+	}
+
+	// Validate IP format
+	int octets[4];
+	int valid = (swscanf(p, L"%d.%d.%d.%d", &octets[0], &octets[1], &octets[2], &octets[3]) == 4);
+
+	if (valid) {
+		for (int i = 0; i < 4; i++) {
+			if (octets[i] < 0 || octets[i] > 255) {
+				valid = 0;
+				break;
+			}
+		}
+	}
+
+	if (!valid) {
+		MessageBoxW(hwnd, L"Invalid IP address.\nExample: 192.168.1.100", L"MicroChat", MB_OK);
+		return FALSE;
+	}
+
+	wcscpy(server_ip, p);
+	server_ip[sizeof(server_ip) / sizeof(wchar_t) - 1] = L'\0';
+	return TRUE;
+}
+
 INT_PTR CALLBACK ConnectDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	(void)lParam;
 
@@ -213,51 +245,14 @@ INT_PTR CALLBACK ConnectDialogProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
 		case WM_COMMAND:
 			switch (LOWORD(wParam)) {
-				case IDOK: {
-					wchar_t ip[16];
-					GetDlgItemTextW(hwnd, IDC_IP, ip, sizeof(ip) / sizeof(wchar_t));
-
-					// Trim leading spaces
-					wchar_t* p = ip;
-					while (*p == L' ') p++;
-
-					// Trim trailing spaces
-					int len = wcslen(p);
-					while (len > 0 && p[len - 1] == L' ') {
-						p[len - 1] = L'\0';
-						len--;
-					}
-
-					if (wcslen(p) == 0) {
-						MessageBoxW(hwnd, L"Please enter a server IP.", L"MicroChat", MB_OK);
+				case IDOK:
+					if (!ValidateAndSetIP(hwnd)) {
 						SetFocus(GetDlgItem(hwnd, IDC_IP));
 						return TRUE;
 					}
 
-					// Validate IP format
-					int octets[4];
-					int valid = (swscanf(p, L"%d.%d.%d.%d", &octets[0], &octets[1], &octets[2], &octets[3]) == 4);
-
-					if (valid) {
-						for (int i = 0; i < 4; i++) {
-							if (octets[i] < 0 || octets[i] > 255) {
-								valid = 0;
-								break;
-							}
-						}
-					}
-
-					if (!valid) {
-						MessageBoxW(hwnd, L"Invalid IP address.\nExample: 192.168.1.100", L"MicroChat", MB_OK);
-						SetFocus(GetDlgItem(hwnd, IDC_IP));
-						return TRUE;
-					}
-
-					wcscpy(server_ip, p);
-					server_ip[sizeof(server_ip) / sizeof(wchar_t) - 1] = L'\0';
 					EndDialog(hwnd, IDOK);
 					return TRUE;
-				}
 
 				case IDCANCEL:
 					EndDialog(hwnd, IDCANCEL);

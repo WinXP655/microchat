@@ -1,5 +1,5 @@
-// MicroChat Framework by WinXP655
-// Minimalistic chat framework written on pure C.
+// MicroChat by WinXP655
+// Minimal chat framework written on pure C.
 // Official repository: https://github.com/WinXP655/microchat.
 // MIT License - free to use, modify and distribute.
 
@@ -33,7 +33,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		// -1 = dialog failed to create.
 		if (dlg == -1) {
 			MessageBoxW(NULL, L"Could not load connection dialog.", L"MicroChat", MB_OK);
-				return 0;
+			return 0;
 		}
 
 		if (dlg != IDOK) return 0;

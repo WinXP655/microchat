@@ -1,3 +1,5 @@
+// Module: Debug Menu (debug.c)
+// Part of MicroChat: https://github.com/WinXP655/microchat
 #include "debug.h"
 #include "microchat.h"
 #include <stdio.h>

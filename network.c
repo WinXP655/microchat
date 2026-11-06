@@ -1,3 +1,5 @@
+// Module: Networking (network.c)
+// Part of MicroChat: https://github.com/WinXP655/microchat
 #include "microchat.h"
 
 SOCKET client_socket = INVALID_SOCKET;
@@ -8,7 +10,7 @@ wchar_t peer_name[256] = L"";
 wchar_t computer_name[256] = L"";
 
 bool is_server = false;
-int is_running = 1;
+volatile LONG is_running = TRUE;
 
 bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
 	WSADATA wsa;
@@ -79,7 +81,9 @@ bool StartServer(HINSTANCE hInstance, int nCmdShow) {
 			continue;
 		}
 
-		struct timeval tv = {5, 0};
+		struct timeval tv;
+		tv.tv_sec  = NET_TIMEOUT_SEC;
+		tv.tv_usec = NET_TIMEOUT_USEC;
 		setsockopt(temp_client, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv));
 
 		client_socket = temp_client;
@@ -194,25 +198,26 @@ unsigned int __stdcall ReceiveMessages(void* arg) {
 	(void)arg;
 	char buffer[BUFFER_SIZE];
 
-	while (is_running) {
-		if (!is_running) break;
+	while (InterlockedCompareExchange(&is_running, 1, 1) != 0) {
 		int bytes = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
 
 		if (bytes == SOCKET_ERROR) {
 			int err = WSAGetLastError();
 			if (err == WSAETIMEDOUT) continue;
 			UIAddMessage(L"Connection with remote computer lost.");
-			is_running = 0;
+			InterlockedExchange(&is_running, 0);
 			break;
 		} else if (bytes == 0) {
 			UIAddMessage(L"Remote computer has closed the connection.");
-			is_running = 0;
+			InterlockedExchange(&is_running, 0);
 			break;
 		}
 
-		buffer[bytes] = '\0';
+		// Since UTF-8 can be more than 1-2 bytes per char, we need to trim carefully.
+		int b = TrimIncompleteUTF8(buffer, bytes);
+		buffer[b] = '\0';
 
-		// Convert received buffer to Unicode for display
+		// Convert received buffer to Unicode for display.
 		wchar_t wbuffer[BUFFER_SIZE];
 		if (MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wbuffer, BUFFER_SIZE) <= 0) continue;
 
@@ -239,32 +244,18 @@ void SendCurrentMessage(HWND hWnd) {
 	int text_len = GetWindowTextW(hEdit, buffer, BUFFER_SIZE - 1);
 	buffer[text_len] = L'\0';
 
-	// Trim leading spaces, tabs, carets and newlines from start.
-	wchar_t* start = buffer;
-	while (*start == L' ' || *start == L'\t' || *start == L'\r' || *start == L'\n') start++;
-	if (start != buffer) {
-		wchar_t* dst = buffer;
-		while ((*dst++ = *start++));
-	}
-
-	text_len = wcslen(buffer);
-
-	// Trim trailing spaces, tabs, carets and newlines from end.
-	while (text_len > 0 && (buffer[text_len - 1] == L'\r' ||
-							buffer[text_len - 1] == L'\n' ||
-							buffer[text_len - 1] == L'\t' ||
-							buffer[text_len - 1] == L' ')) buffer[--text_len] = L'\0';
-
-	if (text_len > 0) {
+	wchar_t* trimmed = Trim(buffer);
+	if (*trimmed != L'\0') {
 		wchar_t full_msg[BUFFER_SIZE + 128];
-		swprintf(full_msg, sizeof(full_msg) / sizeof(wchar_t), L"%ls: %ls", computer_name, buffer);
+		swprintf(full_msg, sizeof(full_msg) / sizeof(wchar_t), L"%ls: %ls", computer_name, trimmed);
 		AddMessage(full_msg);
 
 		// Convert to UTF-8 for transmission
 		char utf8_buffer[BUFFER_SIZE + 128];
-		WideCharToMultiByte(CP_UTF8, 0, full_msg, -1, utf8_buffer, sizeof(utf8_buffer), NULL, NULL);
+		int msg_len = WideCharToMultiByte(CP_UTF8, 0, full_msg, -1, utf8_buffer, sizeof(utf8_buffer), NULL, NULL);
+		if (msg_len <= 1) return;   // Do not send garbage when failed to convert
 
-		int sent = send(client_socket, utf8_buffer, strlen(utf8_buffer), 0);
+		int sent = send(client_socket, utf8_buffer, msg_len - 1, 0);
 		if (sent == SOCKET_ERROR) {
 			wchar_t error_msg[512];
 			swprintf(error_msg, sizeof(error_msg) / sizeof(wchar_t), L"Send failed: %d", WSAGetLastError());

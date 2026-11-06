@@ -1,3 +1,5 @@
+// Module: Utilities/Shared (utils.c)
+// Part of MicroChat: https://github.com/WinXP655/microchat
 #include "microchat.h"
 
 void GetLocalComputerName(void) {
@@ -92,4 +94,48 @@ void ShowError(const wchar_t* msg, DWORD err) {
 	wchar_t buffer[512];
 	swprintf(buffer, sizeof(buffer) / sizeof(wchar_t), L"%ls: %lu", msg, err);
 	MessageBoxW(NULL, buffer, L"MicroChat", MB_OK);
+}
+
+wchar_t* Trim(wchar_t* s) {
+	if (!s) return NULL;
+
+	// Leading spaces
+	while (*s == L' ' || *s == L'\t' || *s == L'\r' || *s == L'\n') s++;
+
+	// Trailing spaces
+	wchar_t* end = s + wcslen(s);
+	while (end > s && (*(end - 1) == L' ' || *(end - 1) == L'\t' || *(end - 1) == L'\r' || *(end - 1) == L'\n')) {
+		end--;
+	}
+
+	*end = L'\0';
+
+	return s;
+}
+
+int TrimIncompleteUTF8(const char* buffer, int bytes) {
+	int pos = bytes;
+
+	while (pos > 0 && ((unsigned char)buffer[pos - 1] & 0xC0) == 0x80) {
+		pos--;
+	}
+
+	if (pos == 0) return 0;
+
+	unsigned char lead = (unsigned char)buffer[pos - 1];
+	int need = 0;
+
+	if ((lead & 0x80) == 0x00) need = 0;
+	else if ((lead & 0xE0) == 0xC0) need = 1;
+	else if ((lead & 0xF0) == 0xE0) need = 2;
+	else if ((lead & 0xF8) == 0xF0) need = 3;
+	else return pos - 1;
+
+	int have = bytes - pos;
+
+	if (have < need) {
+		return pos - 1;
+	}
+
+	return bytes;
 }
