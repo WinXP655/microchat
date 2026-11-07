@@ -7,7 +7,7 @@ No heavy libraries and extra dependencies.
 
 ## Project Status:
 Project is feature-complete and frozen.\
-No features are plannced, but t serves as a stable, lightweight baseline and framework for chat applications.
+No features are planned, but t serves as a stable, lightweight baseline and framework for chat applications.
 
 ## Features
 - **No dependencies:** Works everywhere (Windows 2000 - Windows 11).
@@ -35,8 +35,8 @@ No features are plannced, but t serves as a stable, lightweight baseline and fra
 
 ## Use Cases
 1. **Base for custom chat application**: Adapt the port, UI and build your own messenger.
-2. **Learning Win32 and WinSock**: Minimal, readbale example of TCP sockets, threading an Win32 UI.
-3. **Embedded chat in tools**: Add a simple chat window ino your application.
+2. **Learning Win32 and WinSock**: Minimal, readable example of TCP sockets, threading and Win32 UI.
+3. **Embedded chat in tools**: Add a simple chat window into your application.
 4. **Legacy system development**: Works on Windows 2000 and newer.
 5. **Educational projects**: Study how a chat framework works internally.
 6. **Rapid prototyping**: Test network logic without writing full application.
