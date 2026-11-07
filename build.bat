@@ -36,12 +36,10 @@ echo.
 if %CLEAN%==1 (
     echo Deleting previous build files...
     del microchat.exe
-    del microchat_dbg.exe
     del servconn.o
     echo Done.
     goto end
 )
-
 if exist microchat.exe (
     echo Warning! One or several previous build files has been detected. Please run "build /clean" to remove them.
 )
