@@ -65,18 +65,16 @@ void AddMessage(const wchar_t* msg) {
 }
 
 void CleanupAndExit(void) {
-	is_running = 0;
+	InterlockedExchange(&is_running, 0);
 
 	if (client_socket != INVALID_SOCKET) {
 		shutdown(client_socket, SD_BOTH);
-		closesocket(client_socket);
-		client_socket = INVALID_SOCKET;
 	}
 
 	// WaitFotSingleObject can be used on recv thread without hang
-	// in this order: shutdown - wait - close socket
+	// in this order: shutdown socket - wait - close handle
 	if (receive_thread != NULL) {
-		WaitForSingleObject(receive_thread, 3000);
+		WaitForSingleObject(receive_thread, THREAD_WAIT_MS);
 		CloseHandle(receive_thread);
 		receive_thread = NULL;
 	}
