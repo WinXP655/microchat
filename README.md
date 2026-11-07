@@ -7,7 +7,7 @@ No heavy libraries and extra dependencies.
 
 ## Project Status:
 Project is feature-complete and frozen.\
-No features are planned, but t serves as a stable, lightweight baseline and framework for chat applications.
+No features are planned, but it serves as a stable, lightweight baseline and framework for chat applications.
 
 ## Features
 - **No dependencies:** Works everywhere (Windows 2000 - Windows 11).
@@ -56,7 +56,7 @@ Using Resource Hacker you also can add:
 
 ## 3. Extend MicroChat
 Build anything from this raw engine:
-1. **Copy** `microchat.c` into your project.
+1. **Copy** source code into your project.
 2. **Adapt**: Change the port, swap the UI (Qt/WPF/Console), or strip it for a library.
 3. **Customize**: Implement your own protocol, encryption, or binary data handling.
 4. **Build & Deploy**: Compile with GCC/MSVC and run anywhere.
