@@ -7,7 +7,7 @@ No heavy libraries and extra dependencies.
 
 ## Project Status:
 Project is feature-complete and frozen.\
-No features are plannced, but t serves as a stable, lightweight baseline and framework for chat applications.
+No features are plannced, but it serves as a stable, lightweight baseline and framework for chat applications.
 
 ## Features
 - **No dependencies:** Works everywhere (Windows 2000 - Windows 11).
@@ -16,27 +16,27 @@ No features are plannced, but t serves as a stable, lightweight baseline and fra
 - **Open source:** Fully transparent, easy to audit or extend.
 - **Cross-version compatible:** Designed to run on legacy and modern systems.
 
-> **Security Notice:**
-> MicroChat transmits all data in plain text by default.  
+> **Security Notice:**\
+> MicroChat transmits all data in plain text by default.\
 > If you plan to fork or extend it, it is strongly recommended to add your own encryption layer (XOR/AES/custom protocol).
 
 ## Requirements for Building
 - **Compiler:** 
   - **GCC/MinGW-w64** (via MSYS2 or Cygwin) - recommended for MicroChat builds.
 - **Resource Editing Tool:** 
-  - **Resource Hacker** (optional) - required only if you want to customize connection dialog or icons (not used in build process anymore).
+  - **Resource Hacker** (optional) - required only if you want to customize connection dialog or icons (not used in build process anymore, mostly optional customization).
 - **Basic Skills:**
   - Knowledge of **CMD/CLI** navigation.
   - Intermediate understanding of **C programming, WinAPI and WinSock**.
 - **Build Environment:**
-  - Any **Windows OS** starting from Windows 7 (Win 7, 10, 11 recommended for build tools).
+  - Any **Windows OS** starting from Windows Vista (Win 7, 10, 11 recommended for build tools).
 - **Testing Environment:**
   - Virtual Machines preferred: 2000, XP, 7 through 11.
 
 ## Use Cases
 1. **Base for custom chat application**: Adapt the port, UI and build your own messenger.
-2. **Learning Win32 and WinSock**: Minimal, readbale example of TCP sockets, threading an Win32 UI.
-3. **Embedded chat in tools**: Add a simple chat window ino your application.
+2. **Learning Win32 and WinSock**: Minimal, readbale example of TCP sockets, threading and Win32 UI.
+3. **Embedded chat in tools**: Add a simple chat window into your application.
 4. **Legacy system development**: Works on Windows 2000 and newer.
 5. **Educational projects**: Study how a chat framework works internally.
 6. **Rapid prototyping**: Test network logic without writing full application.
@@ -45,7 +45,7 @@ No features are plannced, but t serves as a stable, lightweight baseline and fra
 
 ### 1. Compiling code
 - Download or clone this repository.
-- Run `build.bat`.
+- Run `build.bat`.\
   Make sure you have GCC in PATH.
 
 ### 2. Customization (optional)
