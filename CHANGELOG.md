@@ -1,4 +1,16 @@
-**MicroChat (Current, 6 November 2026)**:
+**MicroChat (Current, 11 November 2026)**:
+- Removed dublicate of closesocket call in CleanupAndExit.
+- Replaced direct change of is_running in CleanupAndExit to InterlockedExchange.
+- Added microchat_dbg.exe to /clean delete list.
+- Removed resetting timeout from server code (source of deadlocks).
+- Added timeout to client side receive.
+- Added showing error code when connection lost.
+- Added crash handler (instead using default Windows Error Reporting).
+- Moved getting local computer name to InitializeNetwork.
+- Added Ctrl+Shift+C (Crash) and Ctrl+Shift+G (GDI Stats) to debug features.
+- Moved debug info to Ctrl+Shift+D.
+
+**MicroChat (6 November 2026)**:
 - Replaced magic numbers with defines.
 - Replaced hardcoded window size with DEFAULT_WIN_WIDTH and DEFAULT_WIN_HEIGHT macros.
 - Fixed playing default beep while using Ctrl+A.
