@@ -146,7 +146,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			CleanupGdi();
 			CleanupAndExit();
 			return 0;
-		
+
 		case WM_SIZE:
 			ResizeMainWindow(hWnd, LOWORD(lParam), HIWORD(lParam));
 			return 0;
@@ -192,9 +192,12 @@ LRESULT CALLBACK EditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 		// This will not work in release build - it trigger debug dialog which
 		// display internal values. In release, code responsible for this dialog is removed.
-		if (wParam == 'D' && (GetKeyState(VK_CONTROL) & 0x8000)) {
-			ShowDebugInfo(hWnd);
-			return 0;
+		if (GetKeyState(VK_CONTROL) & 0x8000 && (GetKeyState(VK_SHIFT) & 0x8000)) {
+			switch (wParam) {
+				case 'D': ShowDebugInfo(hWnd); return 0;
+				case 'C': TriggerCrash(); return 0;
+				case 'G': ShowGdiCount(); return 0;
+			}
 		}
 	}
 

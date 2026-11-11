@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <process.h>
 #include <wchar.h>
+#include <time.h>
 
 // Defines
 #define ID_EDIT 101
@@ -48,6 +49,9 @@ extern HFONT hFontBold;
 
 // Prototypes
 
+// main.c
+LONG WINAPI CrashHandler(EXCEPTION_POINTERS* ExceptionInfo);
+
 // utils.c
 void GetLocalComputerName(void);
 bool GetDefaultIP(wchar_t* ip_buffer, size_t size);
@@ -80,5 +84,6 @@ void UIAddMessage(const wchar_t* msg);
 
 // debug.c
 void ShowDebugInfo(HWND hWnd);
-
+void TriggerCrash(void);
+void ShowGdiCount(void);
 #endif

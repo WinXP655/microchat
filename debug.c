@@ -46,7 +46,26 @@ void ShowDebugInfo(HWND hWnd) {
 	APPEND(L"peer_name: %ls\n", peer_name);
 
 done:
-	MessageBoxW(hWnd, buffer, L"MicroChat Debug", MB_OK);
+	MessageBoxW(hWnd, buffer, L"MicroChat Debug - Internal Stats", MB_OK);
 #undef APPEND
+#endif
+}
+
+void TriggerCrash(void) {
+#ifdef _DEBUG
+	// Access violation on purpose
+	*(volatile int*)0 = 0;
+#endif
+}
+
+void ShowGdiCount(void) {
+#ifdef _DEBUG
+    // Get GDI objects count
+    DWORD gdiCount = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
+    DWORD userCount = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
+    
+    wchar_t buf[256];
+    swprintf(buf, 256, L"GDI Objects: %lu\nUser Objects: %lu", gdiCount, userCount);
+    MessageBoxW(NULL, buf, L"MicroChat Debug - GDI Stats", MB_OK);
 #endif
 }

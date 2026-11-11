@@ -13,6 +13,9 @@ bool is_server = false;
 volatile LONG is_running = TRUE;
 
 bool InitializeNetwork(bool server_mode, HINSTANCE hInstance, int nCmdShow) {
+	// Moved getting local computer name to InitializeNetwork since it didn't had sense in wWinMain.
+	GetLocalComputerName();
+
 	WSADATA wsa;
 	if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
 		ShowError(L"WSAStartup failed", WSAGetLastError());
@@ -118,9 +121,6 @@ bool StartServer(HINSTANCE hInstance, int nCmdShow) {
 	WideCharToMultiByte(CP_UTF8, 0, computer_name, -1, computer_name_utf8, sizeof(computer_name_utf8), NULL, NULL);
 	send(client_socket, computer_name_utf8, strlen(computer_name_utf8) + 1, 0);
 
-	struct timeval no_timeout = {0, 0};
-	setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&no_timeout, sizeof(no_timeout));
-
 	ShowMainWindow(hInstance, nCmdShow);
 
 	wchar_t sys_msg[512];
@@ -170,6 +170,11 @@ bool StartClient(HINSTANCE hInstance, int nCmdShow) {
 	WideCharToMultiByte(CP_UTF8, 0, computer_name, -1, computer_name_utf8, sizeof(computer_name_utf8), NULL, NULL);
 	send(client_socket, computer_name_utf8, strlen(computer_name_utf8) + 1, 0);
 
+	struct timeval tv;
+	tv.tv_sec = NET_TIMEOUT_SEC;
+	tv.tv_usec = NET_TIMEOUT_USEC;
+	setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv));
+
 	// Receive peer name (UTF-8 -> wchar_t)
 	char peer_name_utf8[256];
 	int recv_len = recv(client_socket, peer_name_utf8, sizeof(peer_name_utf8) - 1, 0);
@@ -204,10 +209,16 @@ unsigned int __stdcall ReceiveMessages(void* arg) {
 		if (bytes == SOCKET_ERROR) {
 			int err = WSAGetLastError();
 			if (err == WSAETIMEDOUT) continue;
-			UIAddMessage(L"Connection with remote computer lost.");
+
+			wchar_t connlost_err[512];
+			swprintf(connlost_err, sizeof(connlost_err) / sizeof(wchar_t), L"Connection with remote computer lost. Error: %d.", err);
+
+			UIAddMessage(connlost_err);
 			InterlockedExchange(&is_running, 0);
 			break;
-		} else if (bytes == 0) {
+		}
+
+		if (bytes == 0) {
 			UIAddMessage(L"Remote computer has closed the connection.");
 			InterlockedExchange(&is_running, 0);
 			break;
@@ -276,8 +287,8 @@ void SendCurrentMessage(HWND hWnd) {
 void Disconnect(void) {
 	wchar_t leave_msg[512];
 	swprintf(leave_msg, sizeof(leave_msg) / sizeof(wchar_t), L"%ls left the chat.", computer_name);
-
 	AddMessage(leave_msg);
+
 	if (client_socket != INVALID_SOCKET) {
 		// Convert wchar_t to UTF-8 for network
 		char utf8_msg[512];
