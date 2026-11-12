@@ -61,7 +61,7 @@ Build anything from this raw engine:
 3. **Customize**: Implement your own protocol, encryption, or binary data handling.
 4. **Build & Deploy**: Compile with GCC/MSVC and run anywhere.
 
-## Looking in more details?
+## Looking for more details?
 Check out DOCS.md for more information.
 
 ## License
