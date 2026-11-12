@@ -7,7 +7,7 @@ No heavy libraries and extra dependencies.
 
 ## Project Status:
 Project is feature-complete and frozen.\
-No features are plannced, but it serves as a stable, lightweight baseline and framework for chat applications.
+No features are planned, but it serves as a stable, lightweight baseline and framework for chat applications.
 
 ## Features
 - **No dependencies:** Works everywhere (Windows 2000 - Windows 11).
@@ -60,6 +60,9 @@ Build anything from this raw engine:
 2. **Adapt**: Change the port, swap the UI (Qt/WPF/Console), or strip it for a library.
 3. **Customize**: Implement your own protocol, encryption, or binary data handling.
 4. **Build & Deploy**: Compile with GCC/MSVC and run anywhere.
+
+## Looking in more details?
+Check out DOCS.md for more information.
 
 ## License
 This application is distributed under MIT license. Explore, learn, enhance.
