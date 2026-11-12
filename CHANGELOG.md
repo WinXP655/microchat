@@ -1,4 +1,7 @@
-**MicroChat (Current, 11 November 2026)**:
+**MicroChat (Current, 12 November 2026)**:
+- Added documentation for internals.
+
+**MicroChat (11 November 2026)**:
 - Removed dublicate of closesocket call in CleanupAndExit.
 - Replaced direct change of is_running in CleanupAndExit to InterlockedExchange.
 - Added microchat_dbg.exe to /clean delete list.
