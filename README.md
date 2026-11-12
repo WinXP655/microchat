@@ -24,7 +24,7 @@ No features are planned, but it serves as a stable, lightweight baseline and fra
 - **Compiler:** 
   - **GCC/MinGW-w64** (via MSYS2 or Cygwin) - recommended for MicroChat builds.
 - **Resource Editing Tool:** 
-  - **Resource Hacker** (optional) - required only if you want to customize connection dialog or icons (not used in build process anymore, mostly optional customization).
+  - **Resource Hacker** is optional and only needed if you want to edit the embedded icon/dialog after compiling.
 - **Basic Skills:**
   - Knowledge of **CMD/CLI** navigation.
   - Intermediate understanding of **C programming, WinAPI and WinSock**.
@@ -56,7 +56,7 @@ Using Resource Hacker you also can add:
 
 ## 3. Extend MicroChat
 Build anything from this raw engine:
-1. **Copy** `microchat.c` into your project.
+1. **Copy** source code files into your project.
 2. **Adapt**: Change the port, swap the UI (Qt/WPF/Console), or strip it for a library.
 3. **Customize**: Implement your own protocol, encryption, or binary data handling.
 4. **Build & Deploy**: Compile with GCC/MSVC and run anywhere.
