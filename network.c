@@ -6,8 +6,8 @@ SOCKET client_socket = INVALID_SOCKET;
 HANDLE receive_thread = NULL;
 wchar_t server_ip[16] = L"";
 wchar_t peer_ip[16] = L"";
-wchar_t peer_name[256] = L"";
-wchar_t computer_name[256] = L"";
+wchar_t peer_name[64] = L"";
+wchar_t computer_name[64] = L"";
 
 bool is_server = false;
 volatile LONG is_running = TRUE;
@@ -123,7 +123,7 @@ bool StartServer(HINSTANCE hInstance, int nCmdShow) {
 
 	ShowMainWindow(hInstance, nCmdShow);
 
-	wchar_t sys_msg[512];
+	wchar_t sys_msg[128];
 	swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"%ls connected from %ls.", peer_name, peer_ip);
 	AddMessage(sys_msg);
 	return true;
@@ -191,7 +191,7 @@ bool StartClient(HINSTANCE hInstance, int nCmdShow) {
 
 	ShowMainWindow(hInstance, nCmdShow);
 
-	wchar_t sys_msg[512];
+	wchar_t sys_msg[128];
 	swprintf(sys_msg, sizeof(sys_msg) / sizeof(wchar_t), L"Connected to %ls.", peer_name);
 	AddMessage(sys_msg);
 	return true;
@@ -210,7 +210,7 @@ unsigned int __stdcall ReceiveMessages(void* arg) {
 			int err = WSAGetLastError();
 			if (err == WSAETIMEDOUT) continue;
 
-			wchar_t connlost_err[512];
+			wchar_t connlost_err[128];
 			swprintf(connlost_err, sizeof(connlost_err) / sizeof(wchar_t), L"Connection with remote computer lost. Error: %d.", err);
 
 			UIAddMessage(connlost_err);
@@ -246,8 +246,7 @@ void SendCurrentMessage(HWND hWnd) {
 	if (maxallowed < 1) maxallowed = 1;
 
 	if (msglen > maxallowed) {
-		wchar_t toolong_err[512] = L"Message is too long to send.";
-		AddMessage(toolong_err);
+		AddMessage(L"Message is too long to send.");
 		return;
 	}
 	
@@ -264,11 +263,11 @@ void SendCurrentMessage(HWND hWnd) {
 		// Convert to UTF-8 for transmission
 		char utf8_buffer[BUFFER_SIZE + 128];
 		int msg_len = WideCharToMultiByte(CP_UTF8, 0, full_msg, -1, utf8_buffer, sizeof(utf8_buffer), NULL, NULL);
-		if (msg_len <= 1) return;   // Do not send garbage when failed to convert
+		if (msg_len <= 1) return; // Do not send garbage when failed to convert
 
 		int sent = send(client_socket, utf8_buffer, msg_len - 1, 0);
 		if (sent == SOCKET_ERROR) {
-			wchar_t error_msg[512];
+			wchar_t error_msg[128];
 			swprintf(error_msg, sizeof(error_msg) / sizeof(wchar_t), L"Send failed: %d", WSAGetLastError());
 			AddMessage(error_msg);
 		}
@@ -285,13 +284,13 @@ void SendCurrentMessage(HWND hWnd) {
 }
 
 void Disconnect(void) {
-	wchar_t leave_msg[512];
+	wchar_t leave_msg[128];
 	swprintf(leave_msg, sizeof(leave_msg) / sizeof(wchar_t), L"%ls left the chat.", computer_name);
 	AddMessage(leave_msg);
 
 	if (client_socket != INVALID_SOCKET) {
 		// Convert wchar_t to UTF-8 for network
-		char utf8_msg[512];
+		char utf8_msg[256];
 		WideCharToMultiByte(CP_UTF8, 0, leave_msg, -1, utf8_msg, sizeof(utf8_msg), NULL, NULL);
 		send(client_socket, utf8_msg, strlen(utf8_msg), 0);
 	}

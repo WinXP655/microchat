@@ -7,7 +7,7 @@
 void ShowDebugInfo(HWND hWnd) {
 	(void)hWnd;
 #ifdef _DEBUG
-	wchar_t buffer[2048];
+	wchar_t buffer[512];
 	int pos = 0;
 	int n;
 
@@ -64,8 +64,8 @@ void ShowGdiCount(void) {
     DWORD gdiCount = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
     DWORD userCount = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
     
-    wchar_t buf[256];
-    swprintf(buf, 256, L"GDI Objects: %lu\nUser Objects: %lu", gdiCount, userCount);
+    wchar_t buf[64];
+    swprintf(buf, sizeof(buf) / sizeof(wchar_t), L"GDI Objects: %lu\nUser Objects: %lu", gdiCount, userCount);
     MessageBoxW(NULL, buf, L"MicroChat Debug - GDI Stats", MB_OK);
 #endif
 }

@@ -37,7 +37,9 @@ bool GetDefaultIP(wchar_t *ip_buffer, size_t size) {
 	char ip_utf8[16];
 	strncpy(ip_utf8, inet_ntoa(local.sin_addr), 15);
 	ip_utf8[15] = '\0';
-	MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, ip_buffer, size);
+
+	int wchars_to_write = (size > 16) ? 16 : (int)size;
+	MultiByteToWideChar(CP_UTF8, 0, ip_utf8, -1, ip_buffer, wchars_to_write);
 
 	return true;
 }
@@ -92,7 +94,7 @@ void CleanupAndExit(void) {
 }
 
 void ShowError(const wchar_t* msg, DWORD err) {
-	wchar_t buffer[512];
+	wchar_t buffer[128];
 	swprintf(buffer, sizeof(buffer) / sizeof(wchar_t), L"%ls: %lu", msg, err);
 	MessageBoxW(NULL, buffer, L"MicroChat", MB_OK);
 }

@@ -24,7 +24,7 @@
 #define PORT 1723
 #define NET_TIMEOUT_SEC 5
 #define NET_TIMEOUT_USEC 0
-#define BUFFER_SIZE 8192
+#define BUFFER_SIZE 4096
 #define THREAD_WAIT_MS 3000
 #define DEFAULT_WIN_WIDTH  520
 #define DEFAULT_WIN_HEIGHT 320
@@ -37,8 +37,8 @@ extern SOCKET client_socket;
 extern HANDLE receive_thread;
 extern wchar_t server_ip[16];
 extern wchar_t peer_ip[16];
-extern wchar_t peer_name[256];
-extern wchar_t computer_name[256];
+extern wchar_t peer_name[64];
+extern wchar_t computer_name[64];
 extern HWND hEdit;
 extern HWND hSendBtn;
 extern HWND hMsgDisplay;

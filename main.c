@@ -11,8 +11,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	(void)hPrevInstance;
 	(void)lpCmdLine;
 
-	// We get local computer name first, so we will already have it when it will be used.
-	GetLocalComputerName();
+	SetUnhandledExceptionFilter(CrashHandler);
 
 	int mode = MessageBoxW(NULL,
 		L"Start MicroChat as:\n"
@@ -47,4 +46,37 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	}
 
 	return msg.wParam;
+}
+
+LONG WINAPI CrashHandler(EXCEPTION_POINTERS* ExceptionInfo) {
+	DWORD code = 0;
+	void* address = NULL;
+
+	if (ExceptionInfo && ExceptionInfo->ExceptionRecord) {
+		code = ExceptionInfo->ExceptionRecord->ExceptionCode;
+		address = ExceptionInfo->ExceptionRecord->ExceptionAddress;
+	}
+
+	wchar_t msg[128]; 
+	swprintf(msg, sizeof(msg) / sizeof(wchar_t), L"Critical error!\nCode: 0x%08lX\nAddress: %p", code, address);
+	MessageBoxW(NULL, msg, L"MicroChat", MB_OK);
+
+	// Write log file
+	HANDLE hFile = CreateFileW(L"crashlog.txt", FILE_APPEND_DATA, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile != INVALID_HANDLE_VALUE) {
+		time_t now = time(NULL);
+		struct tm* t = localtime(&now);
+		char time_str[32];
+		strftime(time_str, sizeof(time_str), "%Y-%m-%d %H:%M:%S", t);
+
+		char buf[128]; 
+		int len = snprintf(buf, sizeof(buf), "[%s] Crash: 0x%08lX at %p\r\n", time_str, code, address);
+		if (len > 0 && len < (int)sizeof(buf)) {
+			DWORD written;
+			WriteFile(hFile, buf, len, &written, NULL);
+		}
+		CloseHandle(hFile);
+	}
+
+	return EXCEPTION_EXECUTE_HANDLER;
 }

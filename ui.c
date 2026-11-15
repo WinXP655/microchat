@@ -19,7 +19,7 @@ void ShowMainWindow(HINSTANCE hInstance, int nCmdShow) {
 	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 	RegisterClassW(&wc);
 
-	wchar_t title[256];
+	wchar_t title[128];
 	swprintf(title, sizeof(title) / sizeof(wchar_t), L"MicroChat - %ls", peer_name);
 	title[sizeof(title) / sizeof(wchar_t) - 1] = L'\0';
 	
@@ -282,7 +282,7 @@ void UIAddMessage(const wchar_t* msg) {
 DWORD WINAPI ShowServerIpMessage(LPVOID lpParam) {
 	(void)lpParam;
 
-	wchar_t buffer[512];
+	wchar_t buffer[128];
 	swprintf(buffer, sizeof(buffer) / sizeof(wchar_t),
 		L"Host IP: %ls\n"
 		L"Share this IP with others for connection.",
