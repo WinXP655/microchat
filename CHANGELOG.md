@@ -1,4 +1,14 @@
-**MicroChat (Current, 12 November 2026)**:
+**MicroChat (Current, 15 November 2026)**:
+- Reduced buffer sizes. MinGW is counting in characters, not bytes, so buffers was oversized.\
+  Debug info: 512 instead 2048\
+  Errors and system messages: 128 instead 512\
+  Main buffer: 4096 instead 8192\
+  Computer name: 64 instead 256\
+  Title bar text: 128 instead 256
+- Fixed some magic numbers to "sizeof(...) / sizeof(wchar_t)".
+- Fixed buffer overflow in GetDefaultIP.
+
+**MicroChat (12 November 2026)**:
 - Added documentation for internals.
 
 **MicroChat (11 November 2026)**:
