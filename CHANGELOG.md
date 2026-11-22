@@ -1,4 +1,10 @@
-**MicroChat (Current, 15 November 2026)**:
+**MicroChat (Current, 22 November 2026)**:
+- Removed previously removed /sym flag from build help.
+- Added check for existence of files when /clean flag is used.
+- Replaced "+ embedding debug symbols" with build type display.
+- Simplified parameters output list.
+
+**MicroChat (15 November 2026)**:
 - Reduced buffer sizes. MinGW is counting in characters, not bytes, so buffers was oversized.\
   Debug info: 512 instead 2048\
   Errors and system messages: 128 instead 512\
