@@ -1,4 +1,7 @@
-**MicroChat (Current, 22 November 2026)**:
+**MicroChat (Current, 26 November 2026)**:
+- Updated readme and documentation.
+
+**MicroChat (22 November 2026)**:
 - Removed previously removed /sym flag from build help.
 - Added check for existence of files when /clean flag is used.
 - Replaced "+ embedding debug symbols" with build type display.
