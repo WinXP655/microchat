@@ -32,8 +32,19 @@ Unlike QuickChat, MicroChat uses an extremely barebones, stateless protocol. The
 ### 2. Data Transfer
 - Messages are encoded in **UTF-8 without the null terminator**.
 - Format: `"<computer_name>: <message>"`.
-- TCP boundaries are treated as message boundaries (one `send` = one message). 
+- TCP boundaries are treated as message boundaries (one `send` = one message, see more in Message Handling). 
 - `TrimIncompleteUTF8()` is used before `MultiByteToWideChar` to prevent message loss if a multi-byte character is split across TCP packets.
+
+### 3. Message Handling
+MicroChat uses a simple receive-based message handling.\
+Each successful `recv()` operation is treated as one displayable message.
+
+TCP is a byte stream and does not preserve application message boundaries, so:
+- A message may be split across multiple receive operations.
+- Multiple message may arrive in a single receive operation.
+- Message fragmentation or combining may result in incomplete or merged display messages.
+
+Current implementation does **not** use a message framing.
 
 ## Shutdown & Cleanup Sequence
 A proper shutdown is critical to prevent deadlocks. The sequence in `CleanupAndExit()` is strictly defined:
