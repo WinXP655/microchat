@@ -16,11 +16,14 @@ No features are planned, but it serves as a stable, lightweight baseline and fra
 - **Open source:** Fully transparent, easy to audit or extend.
 - **Cross-version compatible:** Designed to run on legacy and modern systems.
 
-> **Security Notice:**\
-> MicroChat transmits all data in plain text by default.\
-> If you plan to fork or extend it, it is strongly recommended to add your own encryption layer (XOR/AES/custom protocol).
+## **Security Notice:**
+MicroChat transmits all data in **plain text** by default.\
+It does not provide encryption, peer authentication, or protection against network interception.\
+Do not use MicroChat to transmit sensitive information over untrusted networks.
 
-## Requirements for Building
+If you plan to use MicroChat for production, recommended to impement a real encryption and protocol.
+
+## Requirements
 - **Compiler:** 
   - **GCC/MinGW-w64** (via MSYS2 or Cygwin) - recommended for MicroChat builds.
 - **Resource Editing Tool:** 
@@ -32,6 +35,7 @@ No features are planned, but it serves as a stable, lightweight baseline and fra
   - Any **Windows OS** starting from Windows Vista (Win 7, 10, 11 recommended for build tools).
 - **Testing Environment:**
   - Virtual Machines preferred: 2000, XP, 7 through 11.
+  - Compatibility depends on the Windows API used by MicroChat.
 
 ## Use Cases
 1. **Base for custom chat application**: Adapt the port, UI and build your own messenger.
